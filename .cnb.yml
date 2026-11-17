@@ -1,10 +1,154 @@
+.build_amd64: &build_amd64
+  runner:
+    tags: cnb:arch:amd64
+    cpus: 64
+  docker:
+    image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest
+  services:
+    - docker
+  imports:
+    - https://cnb.cool/myqm/key/-/blob/main/docker_images_key.yaml
+  stages:
+    - name: 记录构建开始时间
+      script: date +%s
+      exports:
+        info: BUILD_START_TIMESTAMP
+    - name: 打印环境变量
+      script: env
+    - name: 登录CNB镜像仓库
+      script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+    - name: 登录腾讯云TCR镜像仓库
+      script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
+    - name: 打印即将要构建的应用
+      script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
+    - name: 构建指定镜像
+      timeout: 30m
+      script: |
+        if [ -z "$build_version" ]; then
+          cd Middleware/$build_application_name && bash build.sh
+        else
+          cd Middleware/$build_application_name/$build_version && bash build.sh
+        fi
+    - name: 查看指定镜像构建结果
+      script: cat /tmp/CUSTOM_ENV_RESULT_INFO
+      exports:
+        code: CUSTOM_ENV_RESULT_CODE
+        info: CUSTOM_ENV_RESULT_INFO
+    - name: 打印指定镜像构建结果
+      script:
+        - cat /tmp/CUSTOM_ENV_RESULT_INFO
+        - echo $CUSTOM_ENV_RESULT_CODE
+        - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO"
+    - name: 计算构建耗时
+      script: |
+        start=${BUILD_START_TIMESTAMP}
+        now=$(date +%s)
+        elapsed=$((now - start))
+        if [ $elapsed -lt 60 ]; then
+          echo "${elapsed}s"
+        else
+          echo "$((elapsed / 60))m$((elapsed % 60))s"
+        fi
+      exports:
+        info: CNB_BUILD_DURATION
+    - name: 导出 AMD64 清单源镜像
+      script: |
+        set -euo pipefail
+        while IFS= read -r tcr_ref; do
+          [ -z "$tcr_ref" ] && continue
+          key="${tcr_ref##*/}"
+          amd64_tcr_ref="${TencentCloud_REGISTRY}/${REGISTRY_ORG}/${key}-amd64"
+          cnb_final_ref="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/${key}"
+          amd64_cnb_ref="${cnb_final_ref}-amd64"
+          skopeo copy --insecure-policy "docker://${tcr_ref}" "docker://${amd64_tcr_ref}" >/dev/null
+          skopeo copy --insecure-policy "docker://${cnb_final_ref}" "docker://${amd64_cnb_ref}" >/dev/null
+          echo "tcr|${amd64_tcr_ref},cnb|${amd64_cnb_ref}"
+        done < /tmp/CUSTOM_ENV_RESULT_INFO
+      exports:
+        info: ARCH_IMAGES
+
+.build_arm64: &build_arm64
+  runner:
+    tags: cnb:arch:arm64:v8
+    cpus: 16
+  docker:
+    image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest-arm64
+  services:
+    - docker
+  imports:
+    - https://cnb.cool/myqm/key/-/blob/main/docker_images_key.yaml
+  stages:
+    - name: 记录构建开始时间
+      script: date +%s
+      exports:
+        info: BUILD_START_TIMESTAMP
+    - name: 打印环境变量
+      script: env
+    - name: 登录CNB镜像仓库
+      script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+    - name: 登录腾讯云TCR镜像仓库
+      script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
+    - name: 打印即将要构建的应用
+      script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
+    - name: 构建指定镜像
+      timeout: 30m
+      script: |
+        if [ -z "$build_version" ]; then
+          cd Middleware/$build_application_name && bash build-arm64.sh
+        else
+          cd Middleware/$build_application_name/$build_version && bash build-arm64.sh
+        fi
+    - name: 查看指定镜像构建结果
+      script: cat /tmp/CUSTOM_ENV_RESULT_INFO
+      exports:
+        code: CUSTOM_ENV_RESULT_CODE
+        info: CUSTOM_ENV_RESULT_INFO
+    - name: 打印指定镜像构建结果
+      script:
+        - cat /tmp/CUSTOM_ENV_RESULT_INFO
+        - echo $CUSTOM_ENV_RESULT_CODE
+        - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO"
+    - name: 计算构建耗时
+      script: |
+        start=${BUILD_START_TIMESTAMP}
+        now=$(date +%s)
+        elapsed=$((now - start))
+        if [ $elapsed -lt 60 ]; then
+          echo "${elapsed}s"
+        else
+          echo "$((elapsed / 60))m$((elapsed % 60))s"
+        fi
+      exports:
+        info: CNB_BUILD_DURATION
+    - name: 导出 ARM64 清单源镜像
+      script: |
+        set -euo pipefail
+        while IFS= read -r tcr_ref; do
+          [ -z "$tcr_ref" ] && continue
+          key="${tcr_ref##*/}"
+          key="${key%-arm64}"
+          cnb_ref="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/${key}-arm64"
+          echo "tcr|${tcr_ref},cnb|${cnb_ref}"
+        done < /tmp/CUSTOM_ENV_RESULT_INFO
+      exports:
+        info: ARCH_IMAGES
+
 main:
 # 匹配所有分支名
 "**":
-  web_trigger_amd_three: ##构建中间件单个镜像-amd64
+  web_trigger_amd_three:
+    - <<: *build_amd64
+  web_trigger_arm_three:
+    - <<: *build_arm64
+  api_trigger_build_amd64:
+    - <<: *build_amd64
+  api_trigger_build_arm64:
+    - <<: *build_arm64
+
+  web_trigger_multiarch: ##一键构建 amd64+arm64 多架构镜像
     - runner:
         tags: cnb:arch:amd64
-        cpus: 64
+        cpus: 8
       docker:
         image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest
       services:
@@ -12,108 +156,107 @@ main:
       imports:
         - https://cnb.cool/myqm/key/-/blob/main/docker_images_key.yaml
       stages:
-        - name: 记录构建开始时间
-          script: date +%s
+        - name: 触发 AMD64 构建
+          type: cnb:trigger
+          options:
+            slug: $CNB_REPO_SLUG
+            branch: $CNB_BRANCH
+            event: api_trigger_build_amd64
+            env:
+              build_application_name: $build_application_name
+              build_version: $build_version
+            sync: true
+            continueOnBuildError: false
+            title: "多架构构建 AMD64 - $build_application_name"
           exports:
-            info: BUILD_START_TIMESTAMP
-        - name: 打印环境变量
-          script: env
+            result.buildSuccess: AMD64_SUCCESS
+            result.sn: AMD64_SN
+            result.lastJobExports.ARCH_IMAGES: AMD64_IMAGES
+        - name: 校验 AMD64 构建结果
+          script: |
+            case "$AMD64_SUCCESS" in
+              true|True) ;;
+              *)
+                echo "❌ AMD64 构建失败，构建号：${AMD64_SN:-未知}" >&2
+                exit 1
+                ;;
+            esac
+            echo "✅ AMD64 构建成功，构建号：${AMD64_SN:-未知}"
+        - name: 触发 ARM64 构建
+          type: cnb:trigger
+          options:
+            slug: $CNB_REPO_SLUG
+            branch: $CNB_BRANCH
+            event: api_trigger_build_arm64
+            env:
+              build_application_name: $build_application_name
+              build_version: $build_version
+            sync: true
+            continueOnBuildError: false
+            title: "多架构构建 ARM64 - $build_application_name"
+          exports:
+            result.buildSuccess: ARM64_SUCCESS
+            result.sn: ARM64_SN
+            result.lastJobExports.ARCH_IMAGES: ARM64_IMAGES
+        - name: 校验 ARM64 构建结果
+          script: |
+            case "$ARM64_SUCCESS" in
+              true|True) ;;
+              *)
+                echo "❌ ARM64 构建失败，构建号：${ARM64_SN:-未知}" >&2
+                exit 1
+                ;;
+            esac
+            echo "✅ ARM64 构建成功，构建号：${ARM64_SN:-未知}"
         - name: 登录CNB镜像仓库
           script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
         - name: 登录腾讯云TCR镜像仓库
           script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
-        - name: 打印即将要构建的应用
-          script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
-        - name: 构建指定镜像
-          timeout: 30m
+        - name: 创建并推送多架构镜像清单
           script: |
-            if [ -z "$build_version" ]; then
-              cd Middleware/$build_application_name && bash build.sh
-            else
-              cd Middleware/$build_application_name/$build_version && bash build.sh
-            fi
-        - name: 查看指定镜像构建结果   
-          script: cat /tmp/CUSTOM_ENV_RESULT_INFO
-          exports:
-            code: CUSTOM_ENV_RESULT_CODE
-            info: CUSTOM_ENV_RESULT_INFO
+            set -euo pipefail
+            declare -A amd_tcr amd_cnb arm_tcr arm_cnb
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              IFS=',' read -r tcr_pair cnb_pair <<< "$line"
+              tcr_ref="${tcr_pair#tcr|}"
+              cnb_ref="${cnb_pair#cnb|}"
+              key="${tcr_ref##*/}"
+              key="${key%-amd64}"
+              amd_tcr["$key"]="$tcr_ref"
+              amd_cnb["$key"]="$cnb_ref"
+            done <<< "$AMD64_IMAGES"
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              IFS=',' read -r tcr_pair cnb_pair <<< "$line"
+              tcr_ref="${tcr_pair#tcr|}"
+              cnb_ref="${cnb_pair#cnb|}"
+              key="${tcr_ref##*/}"
+              key="${key%-arm64}"
+              arm_tcr["$key"]="$tcr_ref"
+              arm_cnb["$key"]="$cnb_ref"
+            done <<< "$ARM64_IMAGES"
+            for key in "${!amd_tcr[@]}"; do
+              if [ -z "${arm_tcr[$key]:-}" ]; then
+                echo "❌ 缺少 ${key} 的 ARM64 镜像" >&2
+                exit 1
+              fi
+              tcr_final="${TencentCloud_REGISTRY}/${REGISTRY_ORG}/${key}"
+              cnb_final="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/${key}"
+              echo "🔨 创建多架构清单：${tcr_final}"
+              docker manifest create --amend "$tcr_final" "${amd_tcr[$key]}" "${arm_tcr[$key]}"
+              docker manifest annotate "$tcr_final" "${amd_tcr[$key]}" --os linux --arch amd64
+              docker manifest annotate "$tcr_final" "${arm_tcr[$key]}" --os linux --arch arm64 --variant v8
+              docker manifest push "$tcr_final"
+              echo "🔨 创建多架构清单：${cnb_final}"
+              docker manifest create --amend "$cnb_final" "${amd_cnb[$key]}" "${arm_cnb[$key]}"
+              docker manifest annotate "$cnb_final" "${amd_cnb[$key]}" --os linux --arch amd64
+              docker manifest annotate "$cnb_final" "${arm_cnb[$key]}" --os linux --arch arm64 --variant v8
+              docker manifest push "$cnb_final"
+            done
+            echo "✅ 多架构镜像清单已推送"
 
-        - name: 打印指定镜像构建结果   
-          script:
-            - cat /tmp/CUSTOM_ENV_RESULT_INFO
-            - echo $CUSTOM_ENV_RESULT_CODE
-            - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO"
-
-        - name: 计算构建耗时
-          script: |
-            start=${BUILD_START_TIMESTAMP}
-            now=$(date +%s)
-            elapsed=$((now - start))
-            if [ $elapsed -lt 60 ]; then
-              echo "${elapsed}s"
-            else
-              echo "$((elapsed / 60))m$((elapsed % 60))s"
-            fi
-          exports:
-            info: CNB_BUILD_DURATION
-
-  web_trigger_arm_three: ##构建中间件单个镜像-arm64
-    - runner:
-        tags: cnb:arch:arm64:v8
-        cpus: 16
-      docker:
-        image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest-arm64
-      services:
-        - docker
-      imports:
-        - https://cnb.cool/myqm/key/-/blob/main/docker_images_key.yaml
-      stages:
-        - name: 记录构建开始时间
-          script: date +%s
-          exports:
-            info: BUILD_START_TIMESTAMP
-        - name: 打印环境变量
-          script: env
-        - name: 登录CNB镜像仓库
-          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
-        - name: 登录腾讯云TCR镜像仓库
-          script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
-        - name: 打印即将要构建的应用
-          script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
-        - name: 构建指定镜像
-          timeout: 30m
-          script: |
-            if [ -z "$build_version" ]; then
-              cd Middleware/$build_application_name && bash build-arm64.sh
-            else
-              cd Middleware/$build_application_name/$build_version && bash build-arm64.sh
-            fi
-        - name: 查看指定镜像构建结果   
-          script: cat /tmp/CUSTOM_ENV_RESULT_INFO
-          exports:
-            code: CUSTOM_ENV_RESULT_CODE
-            info: CUSTOM_ENV_RESULT_INFO
-
-        - name: 打印指定镜像构建结果   
-          script:
-            - cat /tmp/CUSTOM_ENV_RESULT_INFO
-            - echo $CUSTOM_ENV_RESULT_CODE
-            - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO"
-
-        - name: 计算构建耗时
-          script: |
-            start=${BUILD_START_TIMESTAMP}
-            now=$(date +%s)
-            elapsed=$((now - start))
-            if [ $elapsed -lt 60 ]; then
-              echo "${elapsed}s"
-            else
-              echo "$((elapsed / 60))m$((elapsed % 60))s"
-            fi
-          exports:
-            info: CNB_BUILD_DURATION
-
-  # web_trigger_four: ###构建中间件所有镜像  
+  # web_trigger_four: ###构建中间件所有镜像
   #   - docker:
   #       image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest
   #     services:
@@ -141,7 +284,7 @@ main:
   #           emqx:
   #             script: cd Middleware/emqx && bash build.sh
   #             allowFailure: true
-  #             timeout: 15m             
+  #             timeout: 15m
   #           clickhouse:
   #             script: cd Middleware/clickhouse && bash build.sh
   #             allowFailure: true
@@ -190,14 +333,13 @@ main:
   #             script: cd Middleware/minio && bash build.sh
   #             allowFailure: true
   #             timeout: 15m
-  #       - name: 查看所有镜像构建结果      
+  #       - name: 查看所有镜像构建结果
   #         script: cat /tmp/CUSTOM_ENV_RESULT_INFO
   #         exports:
   #           code: CUSTOM_ENV_RESULT_CODE_ALL
   #           info: CUSTOM_ENV_RESULT_INFO_ALL
-            
+
   #       - name: 打印所有镜像构建结果
   #         script:
   #           - echo $CUSTOM_ENV_RESULT_CODE_ALL
   #           - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO_ALL"
-
