@@ -2,13 +2,8 @@
 
 # npm 依赖与日志
 node_modules/
-astro/node_modules/
 npm-debug.log*
 *.log
-
-# Astro 缓存与静态构建产物
-astro/.astro/
-astro/dist/
 
 # 本地密钥
 .env
