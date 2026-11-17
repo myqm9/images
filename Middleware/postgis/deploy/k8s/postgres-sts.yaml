@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tsingyun-postgis-sts
+  namespace: default
+  labels:
+    name: tsingyun-postgis-sts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tsingyun-postgis-sts
+  template:
+    metadata:
+      labels:
+        name: tsingyun-postgis-sts
+    spec:
+      imagePullSecrets:
+        - name: tsingyun-harbor-secret
+      containers:
+        - name: tsingyun-postgis-sts
+          image: harbor.tsingyun.net/tsingyun-middleware/postgis:15.18-3.5.7
+          imagePullPolicy: IfNotPresent
+          args:
+            - -c
+            - max_connections=2000
+          ports:
+            - name: postgis
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_HOST_AUTH_METHOD
+              value: "md5"
+            - name: POSTGRES_PASSWORD
+              value: "xxxxxxx"
+          resources:
+            limits:
+              cpu: "2"
+              memory: 4096Mi
+            requests:
+              cpu: "1"
+              memory: 2048Mi
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            tcpSocket:
+              port: 5432
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            tcpSocket:
+              port: 5432
+          volumeMounts:
+            - name: data-50g-pvc
+              mountPath: /var/lib/postgresql/data
+            - name: init-10g-pvc
+              mountPath: /docker-entrypoint-initdb.d
+  volumeClaimTemplates:
+    - metadata:
+        name: data-50g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 50Gi
+    - metadata:
+        name: init-10g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 10Gi

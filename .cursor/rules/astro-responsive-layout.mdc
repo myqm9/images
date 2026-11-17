@@ -1,0 +1,42 @@
+---
+description: Astro/Starlight 文档站布局自适应写法（对照 MAINTENANCE-RULES 第 3 章）
+globs: astro/**/*.{css,astro,md,mdx}
+alwaysApply: false
+---
+
+# 文档站布局自适应
+
+完整说明见根目录 [`MAINTENANCE-RULES.md`](../../MAINTENANCE-RULES.md) 第 3 章。改页面样式时按下列执行。
+
+## 必须
+
+- 宽度用 `min()` / `%` / `fr`，禁止主栏写死 `width: NNpx`
+- 字号与间距优先 `clamp(min, preferred, max)`
+- 两栏信息区用 `flex-wrap` + `flex: 1 1 <min>`，窄内容区自动叠，不依赖「视口=内容宽」
+- Flex/Grid 子项加 `min-width: 0`；长文本 `overflow-wrap: anywhere`
+- 图片：`max-width: 100%; height: auto`
+- 宽表格：外层 `overflow-x: auto`，保留可读 `min-width`
+- **详情页保留 TOC**；几乎无二级标题的汇总页才可 `tableOfContents: false`
+- 有侧栏 + TOC 时正文贴左侧栏：`--sl-content-margin-inline: 0`（禁止 `auto 0`）
+- 自带大标题的 intro 页：视觉隐藏 `.tdp-page-title`，保留 `#_top`
+- 嵌入 MDX 的自定义块（intro / 统计卡等）根节点加 **`not-content`**，避免 Starlight 给相邻块加 `margin-top` 导致错位
+- 汇总表组件列：勿过窄 + `nowrap`（长名如 `vmware_exporter` 会溢出）
+
+## 正文宽度
+
+```css
+/* 有侧栏无 TOC */
+min(56rem, calc(100vw - var(--sl-sidebar-width) - 2.5rem))
+/* 有侧栏 + TOC：吃满两栏之间剩余宽度，正文贴左侧栏 */
+min(90rem, calc(100vw - var(--sl-sidebar-width) - var(--tdp-toc-width) - 2.5rem))
+/* main-pane 必须 */
+--sl-content-margin-inline: 0; /* 禁止 auto 0 */
+```
+
+## 参考实现
+
+`/changelog/`：`Changelog.astro`（含 `not-content`）+ `custom.css` 中 `.changelog-*`
+
+## 自检
+
+1280 / 1440 / 1920 下：侧栏与正文无大块空洞、无整页横滚、三栏不重叠、长文案可换行；多列统计顶对齐。

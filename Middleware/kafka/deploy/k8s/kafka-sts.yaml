@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tsingyun-kafka-sts
+  namespace: default
+  labels:
+    name: tsingyun-kafka-sts
+spec:
+  serviceName: tsingyun-kafka-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tsingyun-kafka-sts
+  template:
+    metadata:
+      labels:
+        name: tsingyun-kafka-sts
+    spec:
+      containers:
+        - name: tsingyun-kafka-sts
+          image: harbor.tsingyun.net/tsingyun-middleware/kafka-kraft:3.9.2
+          imagePullPolicy: Always
+          ports:
+            # 集群内应用访问
+            - name: internal
+              containerPort: 9092
+            # 集群外应用访问
+            - name: external
+              containerPort: 9094
+            # Kafka KRaft 自己内部 controller 通信
+            - name: controller
+              containerPort: 9093
+          env:
+            - name: MODE
+              value: "standalone"
+
+            # 监听端口
+            - name: KAFKA_LISTENERS
+              value: "INTERNAL://:9092,EXTERNAL://:9094,CONTROLLER://:9093"
+
+            # 对外通告地址
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: "INTERNAL://tsingyun-kafka-svc:9092,EXTERNAL://172.24.0.xx:30902"
+
+            # listener 名称与协议映射
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
+
+            # broker 间通信走内部 listener
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "INTERNAL"
+
+            # KRaft controller listener
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2048Mi
+            requests:
+              cpu: "500m"
+              memory: 1024Mi
+
+          readinessProbe:
+            initialDelaySeconds: 40
+            periodSeconds: 5
+            timeoutSeconds: 3
+            tcpSocket:
+              port: 9092
+
+          volumeMounts:
+            - name: data-10g-pvc
+              mountPath: /tmp/kraft-combined-logs
+
+      imagePullSecrets:
+        - name: tsingyun-harbor-secret
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data-10g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 10Gi

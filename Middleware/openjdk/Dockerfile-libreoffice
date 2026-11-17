@@ -1,0 +1,44 @@
+FROM eclipse-temurin:11.0.23_9-jdk-ubi9-minimal
+
+
+ENV TZ=Asia/Shanghai \
+    LANG=zh_CN.UTF-8 \
+    LC_ALL=zh_CN.UTF-8
+
+# 安装 dnf
+RUN microdnf update -y && \
+    microdnf install -y dnf && \
+    microdnf clean all
+
+# 安装基础依赖（不要安装 curl，避免与 curl-minimal 冲突）
+RUN dnf update -y && \
+    dnf install -y --allowerasing \
+        tzdata \
+        fontconfig \
+        bash \
+        unzip \
+        tar \
+        nc \
+        wget \
+        vim
+
+WORKDIR /tmp
+
+# 下载 LibreOffice
+RUN wget https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/LibreOffice_7.5.9.2_Linux_x86-64_rpm.tar.gz \
+    && tar xf LibreOffice_7.5.9.2_Linux_x86-64_rpm.tar.gz \
+    && dnf localinstall -y LibreOffice_7.5.9.2_Linux_x86-64_rpm/RPMS/*.rpm \
+    && rm -rf LibreOffice*
+
+# 创建兼容软链接
+RUN ln -sf /opt/libreoffice7.5 /opt/libreoffice
+
+# 字体
+RUN mkdir -p /usr/share/fonts/chinese
+COPY fonts/ /usr/share/fonts/chinese/
+RUN chmod -R 644 /usr/share/fonts/chinese && \
+    fc-cache -fv
+
+WORKDIR /app
+
+CMD ["bash"]

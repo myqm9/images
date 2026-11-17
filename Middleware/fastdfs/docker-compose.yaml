@@ -1,0 +1,19 @@
+version: '3'
+services:
+  fastdfs:
+    image: dockerhub.qingcloud.com/tsingyun_middleware/fastdfs:6.10.0
+    container_name: fastdfs
+    restart: always
+    volumes:
+      - "/home/application/Middleware/fastdfs/fastdfs_data:/home/dfs/data"
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      FASTDFS_IPADDR: "172.22.33.2"
+      TZ: Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "23000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    network_mode: host

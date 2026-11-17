@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tsingyun-geoserver-sts
+  namespace: default
+  labels:
+    name: tsingyun-geoserver-sts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tsingyun-geoserver-sts
+  template:
+    metadata:
+      labels:
+        name: tsingyun-geoserver-sts
+    spec:
+      imagePullSecrets:
+        - name: tsingyun-harbor-secret
+      containers:
+        - name: tsingyun-geoserver-sts
+          image: harbor.tsingyun.net/tsingyun-middleware/geoserver:2.27.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: GEOSERVER_ADMIN_USER
+              value: "admin"
+            - name: GEOSERVER_ADMIN_PASSWORD
+              value: "xxxx"
+            - name: SKIP_DEMO_DATA
+              value: "true"
+            - name: CORS_ENABLED
+              value: "true"
+            - name: TZ
+              value: "Asia/Shanghai"
+            - name: EXTRA_JAVA_OPTS
+              value: "-Xms1G -Xmx2G"
+          resources:
+            limits:
+              cpu: "2"
+              memory: 4096Mi
+            requests:
+              cpu: "1"
+              memory: 2048Mi
+          readinessProbe:
+            initialDelaySeconds: 40
+            periodSeconds: 10
+            timeoutSeconds: 5
+            tcpSocket:
+              port: 8080
+          livenessProbe:
+            initialDelaySeconds: 40
+            periodSeconds: 20
+            timeoutSeconds: 5
+            tcpSocket:
+              port: 8080
+          volumeMounts:
+            - name: geoserver-data-20g-pvc
+              mountPath: /opt/geoserver_data
+            - name: map-data-20g-pvc
+              mountPath: /map
+  volumeClaimTemplates:
+    - metadata:
+        name: geoserver-data-20g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 20Gi
+    - metadata:
+        name: map-data-20g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 20Gi

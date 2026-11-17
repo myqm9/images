@@ -1,0 +1,23 @@
+---
+import MobileTableOfContents from 'virtual:starlight/components/MobileTableOfContents';
+import TableOfContents from 'virtual:starlight/components/TableOfContents';
+import SharePage from './SharePage.astro';
+
+const { toc } = Astro.locals.starlightRoute;
+---
+
+{
+  toc && (
+    <>
+      <div class="lg:sl-hidden">
+        <MobileTableOfContents />
+      </div>
+      <aside class="tdp-page-sidebar sl-hidden lg:sl-block" aria-label="本页导航">
+        <SharePage />
+        <div class="tdp-toc">
+          <TableOfContents />
+        </div>
+      </aside>
+    </>
+  )
+}

@@ -1,0 +1,32 @@
+---
+import EditLink from 'virtual:starlight/components/EditLink';
+import LastUpdated from 'virtual:starlight/components/LastUpdated';
+import Pagination from 'virtual:starlight/components/Pagination';
+import ScrollProgress from './ScrollProgress.astro';
+
+const isSplashPage = Astro.locals.starlightRoute.entry.data.template === 'splash';
+---
+
+<footer class="sl-flex tdp-footer">
+  {
+    !isSplashPage && (
+      <>
+        <div class="meta sl-flex">
+          <EditLink />
+          <LastUpdated />
+        </div>
+        <Pagination />
+      </>
+    )
+  }
+  <p class="tdp-copyright">Copyright © 2026 Powered by 清云智通</p>
+  <ScrollProgress />
+</footer>
+
+<style>
+  @layer starlight.core {
+    .tdp-footer { flex-direction: column; gap: 1.5rem; }
+    .meta { gap: .75rem 3rem; justify-content: space-between; flex-wrap: wrap; margin-top: 3rem; font-size: var(--sl-text-sm); color: var(--sl-color-gray-3); }
+    .meta > :global(p:only-child) { margin-inline-start: auto; }
+  }
+</style>

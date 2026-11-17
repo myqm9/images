@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tsingyun-emqx-sts
+  namespace: default
+  labels:
+    name: tsingyun-emqx-sts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tsingyun-emqx-sts
+  template:
+    metadata:
+      labels:
+        name: tsingyun-emqx-sts
+    spec:
+      containers:
+        - name: tsingyun-emqx-sts
+          image: harbor.tsingyun.net/tsingyun-middleware/emqx:5.8.9
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: dashboard
+              containerPort: 18083
+            - name: mqtt
+              containerPort: 1883
+            - name: api
+              containerPort: 8081
+            - name: mqtt-ssl
+              containerPort: 8883
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2048Mi
+            requests:
+              cpu: "500m"
+              memory: 1024Mi
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+            tcpSocket:
+              port: 1883
+          livenessProbe:
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            tcpSocket:
+              port: 1883
+          volumeMounts:
+            - name: data-30g-pvc
+              mountPath: /opt/emqx/data
+              subPath: data
+            - name: localtime
+              mountPath: /etc/localtime
+              readOnly: true
+      imagePullSecrets:
+        - name: tsingyun-harbor-secret
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+  volumeClaimTemplates:
+    - metadata:
+        name: data-30g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 30Gi

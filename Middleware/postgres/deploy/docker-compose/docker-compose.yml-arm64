@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+  postgres:
+    container_name: postgres
+    image: harbor.tsingyun.net/tsingyun-middleware/postgres:15.18-alpine3.24-arm64
+    networks:
+      - tsingyun    
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: md5
+      POSTGRES_PASSWORD: xxxxxxx
+      #ALLOW_IP_RANGE: 0.0.0.0/0
+    volumes:
+      - /home/application/Database/postgres/data:/var/lib/postgresql/data
+      - /home/application/Database/postgres/init:/docker-entrypoint-initdb.d/
+    command: -c max_connections=2000
+    ports:
+      - "5432:5432"
+    restart: always
+
+networks:
+  tsingyun:
+    external: true

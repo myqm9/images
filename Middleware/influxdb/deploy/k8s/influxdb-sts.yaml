@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tsingyun-influxdb-sts
+  namespace: default
+  labels:
+    name: tsingyun-influxdb-sts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tsingyun-influxdb-sts
+  template:
+    metadata:
+      labels:
+        name: tsingyun-influxdb-sts
+    spec:
+      imagePullSecrets:
+        - name: tsingyun-harbor-secret
+      containers:
+        - name: tsingyun-influxdb-sts
+          image: harbor.tsingyun.net/tsingyun-middleware/influxdb:3.9.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - influxdb3
+            - serve
+            - --node-id=node0
+            - --object-store=file
+            - --data-dir=/var/lib/influxdb3/data
+            - --plugin-dir=/var/lib/influxdb3/plugins
+          ports:
+            - name: http
+              containerPort: 8181
+              protocol: TCP
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+          resources:
+            limits:
+              cpu: "4"
+              memory: 8192Mi
+            requests:
+              cpu: "2"
+              memory: 4096Mi
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+            tcpSocket:
+              port: 8181
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+            tcpSocket:
+              port: 8181
+          volumeMounts:
+            - name: data-50g-pvc
+              mountPath: /var/lib/influxdb3/data
+            - name: plugins-10g-pvc
+              mountPath: /var/lib/influxdb3/plugins
+            - name: localtime
+              mountPath: /etc/localtime
+              readOnly: true
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+  volumeClaimTemplates:
+    - metadata:
+        name: data-50g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 50Gi
+    - metadata:
+        name: plugins-10g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 10Gi

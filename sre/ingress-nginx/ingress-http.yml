@@ -1,0 +1,185 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: ingress-http
+  namespace: default
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true" # 强制将 HTTP 请求重定向到 HTTPS
+    nginx.ingress.kubernetes.io/app-root: /main-pc # 访问根路径时默认跳转到 /main-pc
+    kubernetes.io/ingress.class: "nginx" # 指定由 nginx ingress controller 处理
+spec:
+  ingressClassName: nginx
+  defaultBackend:
+    service:
+      name: tsingyun-main-pc-fe-svc
+      port:
+        number: 8080
+  tls:
+    - hosts:
+        - k8s.srebro.cn
+      secretName: srebro.cn-tls
+  rules:
+    - host: k8s.srebro.cn
+      http:
+        paths:
+          - path: /
+            pathType: Exact
+            backend:
+              service:
+                name: tsingyun-main-pc-fe-svc
+                port:
+                  number: 8080
+          - path: /main-pc
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-main-pc-fe-svc
+                port:
+                  number: 8080
+          - path: /nacos
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-nacos-svc
+                port:
+                  number: 8848
+          - path: /platform-iot
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-platform-iot-fe-svc
+                port:
+                  number: 8080
+          - path: /alarm
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-alarm-fe-svc
+                port:
+                  number: 8080
+          - path: /risk
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-risk-fe-svc
+                port:
+                  number: 8080
+          - path: /bizbase-pc
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-bizbase-pc-fe-svc
+                port:
+                  number: 8080
+          - path: /meta-design
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-meta-design-fe-svc
+                port:
+                  number: 8080
+          - path: /psm-basics
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-basics-fe-svc
+                port:
+                  number: 8080
+          - path: /psm-danger
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-danger-fe-svc
+                port:
+                  number: 8080
+          - path: /psm-prevention
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-prevention-fe-svc
+                port:
+                  number: 8080
+          - path: /psm-contractor
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-contractor-fe-svc
+                port:
+                  number: 8080
+          - path: /psm-work
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-work-fe-svc
+                port:
+                  number: 8080
+          - path: /psm-position
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-position-fe-svc
+                port:
+                  number: 8080
+          - path: /psm-inspection
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-inspection-fe-svc
+                port:
+                  number: 8080
+          - path: /psm-education
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-education-fe-svc
+                port:
+                  number: 8080
+          - path: /psm-other
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-other-fe-svc
+                port:
+                  number: 8080
+          - path: /psm-ioc-gis
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-ioc-gis-svc
+                port:
+                  number: 8080
+          - path: /psm-mobile
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-mobile-svc
+                port:
+                  number: 8080
+          - path: /psm-mobile-edu
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-psm-mobile-edu-svc
+                port:
+                  number: 8080
+          - path: /main-mobile
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-main-mobile-fe-svc
+                port:
+                  number: 8080
+          - path: /bizbase-mobile
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-bizbase-mobile-fe-svc
+                port:
+                  number: 8080
+          - path: /alarm-mobile
+            pathType: Prefix
+            backend:
+              service:
+                name: tsingyun-alarm-mobile-svc
+                port:
+                  number: 8080

@@ -1,0 +1,529 @@
+main:
+# 匹配所有分支名
+"**":
+  web_trigger_amd_three: ##构建中间件单个镜像-amd64
+    - runner:
+        tags: cnb:arch:amd64
+        cpus: 64
+      docker:
+        image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest
+      services:
+        - docker
+      imports: 
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/qingcloud-dockerhub.yaml
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/wecom-message.yaml
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/tsingyun-harbor.yaml
+      stages:
+        - name: 记录构建开始时间
+          script: date +%s
+          exports:
+            info: BUILD_START_TIMESTAMP
+        - name: 打印环境变量
+          script: env
+        - name: 登录CNB镜像仓库
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: 登录qingcloud镜像仓库
+          script: docker login -u ${Qingcloud_Dockerhub_USER_NAME} -p "${Qingcloud_Dockerhub_PASSWORD}" ${Qingcloud_Dockerhub_REGISTRY}
+        - name: 登录tsingyun-harbor镜像仓库
+          script: docker login -u ${Tsingyun_Harbor_USER_NAME} -p "${Tsingyun_Harbor_PASSWORD}" ${Tsingyun_Harbor_REGISTRY}
+        - name: 打印即将要构建的应用
+          script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
+        - name: 构建指定镜像
+          timeout: 30m
+          script: |
+            if [ -z "$build_version" ]; then
+              cd Middleware/$build_application_name && bash build.sh
+            else
+              cd Middleware/$build_application_name/$build_version && bash build.sh
+            fi
+        - name: 查看指定镜像构建结果   
+          script: cat /tmp/CUSTOM_ENV_RESULT_INFO
+          exports:
+            code: CUSTOM_ENV_RESULT_CODE
+            info: CUSTOM_ENV_RESULT_INFO
+
+        - name: 打印指定镜像构建结果   
+          script:
+            - cat /tmp/CUSTOM_ENV_RESULT_INFO
+            - echo $CUSTOM_ENV_RESULT_CODE
+            - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO"
+
+        - name: 计算构建耗时
+          script: |
+            start=${BUILD_START_TIMESTAMP}
+            now=$(date +%s)
+            elapsed=$((now - start))
+            if [ $elapsed -lt 60 ]; then
+              echo "${elapsed}s"
+            else
+              echo "$((elapsed / 60))m$((elapsed % 60))s"
+            fi
+          exports:
+            info: CNB_BUILD_DURATION
+
+        - name: 企微通知
+          image: tencentcom/wecom-message
+          settings:
+            robot: ${qw_webhook_token}
+            msgType: markdown_v2
+            content: |
+              🎉 AMD64镜像，构建成功
+              | 项目构建地址 | 镜像地址 | 构建耗时 |
+              | ------------ | -------- | -------- |
+              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CUSTOM_ENV_RESULT_INFO} | ${CNB_BUILD_DURATION} |
+
+
+      failStages:
+        - name: 企微通知
+          image: tencentcom/wecom-message
+          settings:
+            robot: ${qw_webhook_token}
+            msgType: markdown_v2
+            content: |
+              # ❌ AMD64镜像，构建失败，请相关同事注意
+              | 项目构建地址 | 构建耗时 |
+              | ------------ | -------- |
+              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CNB_BUILD_DURATION} |
+
+  web_trigger_arm_three: ##构建中间件单个镜像-arm64
+    - runner:
+        tags: cnb:arch:arm64:v8
+        cpus: 16
+      docker:
+        image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest-arm64
+      services:
+        - docker
+      imports: 
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/qingcloud-dockerhub.yaml
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/wecom-message.yaml
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/tsingyun-harbor.yaml
+      stages:
+        - name: 记录构建开始时间
+          script: date +%s
+          exports:
+            info: BUILD_START_TIMESTAMP
+        - name: 打印环境变量
+          script: env
+        - name: 登录CNB镜像仓库
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: 登录qingcloud镜像仓库
+          script: docker login -u ${Qingcloud_Dockerhub_USER_NAME} -p "${Qingcloud_Dockerhub_PASSWORD}" ${Qingcloud_Dockerhub_REGISTRY}
+        - name: 登录tsingyun-harbor镜像仓库
+          script: docker login -u ${Tsingyun_Harbor_USER_NAME} -p "${Tsingyun_Harbor_PASSWORD}" ${Tsingyun_Harbor_REGISTRY}
+        - name: 打印即将要构建的应用
+          script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
+        - name: 构建指定镜像
+          timeout: 30m
+          script: |
+            if [ -z "$build_version" ]; then
+              cd Middleware/$build_application_name && bash build-arm64.sh
+            else
+              cd Middleware/$build_application_name/$build_version && bash build-arm64.sh
+            fi
+        - name: 查看指定镜像构建结果   
+          script: cat /tmp/CUSTOM_ENV_RESULT_INFO
+          exports:
+            code: CUSTOM_ENV_RESULT_CODE
+            info: CUSTOM_ENV_RESULT_INFO
+
+        - name: 打印指定镜像构建结果   
+          script:
+            - cat /tmp/CUSTOM_ENV_RESULT_INFO
+            - echo $CUSTOM_ENV_RESULT_CODE
+            - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO"
+
+        - name: 计算构建耗时
+          script: |
+            start=${BUILD_START_TIMESTAMP}
+            now=$(date +%s)
+            elapsed=$((now - start))
+            if [ $elapsed -lt 60 ]; then
+              echo "${elapsed}s"
+            else
+              echo "$((elapsed / 60))m$((elapsed % 60))s"
+            fi
+          exports:
+            info: CNB_BUILD_DURATION
+
+        - name: 企微通知
+          image: tencentcom/wecom-message
+          settings:
+            robot: ${qw_webhook_token}
+            msgType: markdown_v2
+            content: |
+              🎉 ARM64镜像，构建成功
+              | 项目构建地址 | 镜像地址 | 构建耗时 |
+              | ------------ | -------- | -------- |
+              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CUSTOM_ENV_RESULT_INFO} | ${CNB_BUILD_DURATION} |
+
+
+      failStages:
+        - name: 企微通知
+          image: tencentcom/wecom-message
+          settings:
+            robot: ${qw_webhook_token}
+            msgType: markdown_v2
+            content: |
+              # ❌ ARM64镜像，构建失败
+              | 项目构建地址 | 构建耗时 |
+              | ------------ | -------- |
+              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CNB_BUILD_DURATION} |
+
+  # web_trigger_four: ###构建中间件所有镜像  
+  #   - docker:
+  #       image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest
+  #     services:
+  #       - docker
+  #     imports: 
+  #       - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/qingcloud-dockerhub.yaml
+  #       - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/wecom-message.yaml
+  #     runner:
+  #       cpus: 64
+  #     stages:
+  #       - name: 打印环境变量
+  #         script: env
+  #       - name: 登录CNB镜像仓库
+  #         script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+  #       - name: 登录qingcloud镜像仓库
+  #         script: docker login -u ${Qingcloud_Dockerhub_USER_NAME} -p "${Qingcloud_Dockerhub_PASSWORD}" ${Qingcloud_Dockerhub_REGISTRY}
+  #       - name: 打印即将要构建的应用
+  #         script: echo "即将要构建的应用:$build_application_name"
+  #         # 构建所有镜像
+  #       - name: 构建所有镜像
+  #         jobs:
+  #           kafka:
+  #             script: cd Middleware/kafka && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           emqx:
+  #             script: cd Middleware/emqx && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m             
+  #           clickhouse:
+  #             script: cd Middleware/clickhouse && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           fastdfs:
+  #             script: cd Middleware/fastdfs && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           redis:
+  #             script: cd Middleware/redis && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           postgres:
+  #             script: cd Middleware/postgres && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           openjdk:
+  #             script: cd Middleware/openjdk && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           nacos:
+  #             script: cd Middleware/nacos && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           geoserver:
+  #             script: cd Middleware/geoserver && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           influxdb:
+  #             script: cd Middleware/influxdb && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           apollo:
+  #             script: cd Middleware/apollo && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           nginx:
+  #             script: cd Middleware/nginx && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           libreoffice:
+  #             script: cd Middleware/libreoffice && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           minio:
+  #             script: cd Middleware/minio && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #       - name: 查看所有镜像构建结果      
+  #         script: cat /tmp/CUSTOM_ENV_RESULT_INFO
+  #         exports:
+  #           code: CUSTOM_ENV_RESULT_CODE_ALL
+  #           info: CUSTOM_ENV_RESULT_INFO_ALL
+            
+  #       - name: 打印所有镜像构建结果
+  #         script:
+  #           - echo $CUSTOM_ENV_RESULT_CODE_ALL
+  #           - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO_ALL"
+
+  #       - name: 企微通知
+  #         image: tencentcom/wecom-message
+  #         settings:
+  #           robot: ${qw_webhook_token}
+  #           msgType: markdown
+  #           content: |
+  #             # 构建状态<font color="info">成功</font>，请相关同事注意
+  #             > 项目构建地址: [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL})
+  #             > 镜像地址: ${CUSTOM_ENV_RESULT_INFO_ALL}
+  #             > 构建者: ${CNB_BUILD_USER}
+
+  #     failStages:
+  #       - name: 企微通知
+  #         image: tencentcom/wecom-message
+  #         settings:
+  #           robot: ${qw_webhook_token}
+  #           msgType: markdown
+  #           content: |
+  #             # 构建状态<font color="warning">失败</font>，请相关同事注意
+  #             > 项目构建地址: [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL})
+  #             > 构建者: ${CNB_BUILD_USER}
+
+  web_trigger_amd_five: ##构建运维单个AMD64镜像
+    - runner:
+        tags: cnb:arch:amd64
+        cpus: 64
+      docker:
+        image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest
+      services:
+        - docker
+      imports: 
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/qingcloud-dockerhub.yaml
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/wecom-message.yaml
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/tsingyun-harbor.yaml
+      stages:
+        - name: 记录构建开始时间
+          script: date +%s
+          exports:
+            info: BUILD_START_TIMESTAMP
+        - name: 打印环境变量
+          script: env
+        - name: 登录CNB镜像仓库
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: 登录qingcloud镜像仓库
+          script: docker login -u ${Qingcloud_Dockerhub_USER_NAME} -p "${Qingcloud_Dockerhub_PASSWORD}" ${Qingcloud_Dockerhub_REGISTRY}
+        - name: 登录tsingyun-harbor镜像仓库
+          script: docker login -u ${Tsingyun_Harbor_USER_NAME} -p "${Tsingyun_Harbor_PASSWORD}" ${Tsingyun_Harbor_REGISTRY}
+        - name: 打印即将要构建的应用
+          script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
+        - name: 构建指定镜像
+          timeout: 15m
+          script: |
+            if [ -z "$build_version" ]; then
+              cd sre/$build_application_name && bash build.sh
+            else
+              cd sre/$build_application_name/$build_version && bash build.sh
+            fi
+        - name: 查看指定镜像构建结果   
+          script: cat /tmp/CUSTOM_ENV_RESULT_INFO
+          exports:
+            code: CUSTOM_ENV_RESULT_CODE
+            info: CUSTOM_ENV_RESULT_INFO
+
+        - name: 打印指定镜像构建结果   
+          script:
+            - cat /tmp/CUSTOM_ENV_RESULT_INFO
+            - echo $CUSTOM_ENV_RESULT_CODE
+            - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO"
+
+        - name: 计算构建耗时
+          script: |
+            start=${BUILD_START_TIMESTAMP}
+            now=$(date +%s)
+            elapsed=$((now - start))
+            if [ $elapsed -lt 60 ]; then
+              echo "${elapsed}s"
+            else
+              echo "$((elapsed / 60))m$((elapsed % 60))s"
+            fi
+          exports:
+            info: CNB_BUILD_DURATION
+
+        - name: 企微通知
+          image: tencentcom/wecom-message
+          settings:
+            robot: ${qw_webhook_token}
+            msgType: markdown_v2
+            content: |
+              🎉 AMD64镜像，构建成功
+              | 项目构建地址 | 镜像地址 | 构建耗时 |
+              | ------------ | -------- | -------- |
+              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CUSTOM_ENV_RESULT_INFO} | ${CNB_BUILD_DURATION} |
+
+
+      failStages:
+        - name: 企微通知
+          image: tencentcom/wecom-message
+          settings:
+            robot: ${qw_webhook_token}
+            msgType: markdown_v2
+            content: |
+              # ❌ AMD64镜像，构建失败，请相关同事注意
+              | 项目构建地址 | 构建耗时 |
+              | ------------ | -------- |
+              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CNB_BUILD_DURATION} |
+
+  web_trigger_arm_five: ##构建运维单个ARM64镜像
+    - runner:
+        tags: cnb:arch:arm64:v8
+        cpus: 16
+      docker:
+        image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest-arm64
+      services:
+        - docker
+      imports: 
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/qingcloud-dockerhub.yaml
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/wecom-message.yaml
+        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/tsingyun-harbor.yaml
+      stages:
+        - name: 记录构建开始时间
+          script: date +%s
+          exports:
+            info: BUILD_START_TIMESTAMP
+        - name: 打印环境变量
+          script: env
+        - name: 登录CNB镜像仓库
+          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+        - name: 登录qingcloud镜像仓库
+          script: docker login -u ${Qingcloud_Dockerhub_USER_NAME} -p "${Qingcloud_Dockerhub_PASSWORD}" ${Qingcloud_Dockerhub_REGISTRY}
+        - name: 登录tsingyun-harbor镜像仓库
+          script: docker login -u ${Tsingyun_Harbor_USER_NAME} -p "${Tsingyun_Harbor_PASSWORD}" ${Tsingyun_Harbor_REGISTRY}
+        - name: 打印即将要构建的应用
+          script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
+        - name: 构建指定镜像
+          timeout: 30m
+          script: |
+            if [ -z "$build_version" ]; then
+              cd sre/$build_application_name && bash build-arm64.sh
+            else
+              cd sre/$build_application_name/$build_version && bash build-arm64.sh
+            fi
+        - name: 查看指定镜像构建结果   
+          script: cat /tmp/CUSTOM_ENV_RESULT_INFO
+          exports:
+            code: CUSTOM_ENV_RESULT_CODE
+            info: CUSTOM_ENV_RESULT_INFO
+
+        - name: 打印指定镜像构建结果   
+          script:
+            - cat /tmp/CUSTOM_ENV_RESULT_INFO
+            - echo $CUSTOM_ENV_RESULT_CODE
+            - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO"
+
+        - name: 计算构建耗时
+          script: |
+            start=${BUILD_START_TIMESTAMP}
+            now=$(date +%s)
+            elapsed=$((now - start))
+            if [ $elapsed -lt 60 ]; then
+              echo "${elapsed}s"
+            else
+              echo "$((elapsed / 60))m$((elapsed % 60))s"
+            fi
+          exports:
+            info: CNB_BUILD_DURATION
+
+        - name: 企微通知
+          image: tencentcom/wecom-message
+          settings:
+            robot: ${qw_webhook_token}
+            msgType: markdown_v2
+            content: |
+              🎉 ARM64镜像，构建成功
+              | 项目构建地址 | 镜像地址 | 构建耗时 |
+              | ------------ | -------- | -------- |
+              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CUSTOM_ENV_RESULT_INFO} | ${CNB_BUILD_DURATION} |
+
+
+      failStages:
+        - name: 企微通知
+          image: tencentcom/wecom-message
+          settings:
+            robot: ${qw_webhook_token}
+            msgType: markdown_v2
+            content: |
+              # ❌ ARM64镜像，构建失败
+              | 项目构建地址 | 构建耗时 |
+              | ------------ | -------- |
+              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CNB_BUILD_DURATION} |
+
+  #     failStages:
+  #       - name: 企微通知
+  #         image: tencentcom/wecom-message
+  #         settings:
+  #           robot: ${qw_webhook_token}
+  #           msgType: markdown
+  #           content: |
+  #             # 构建状态<font color="warning">失败</font>，请相关同事注意
+  #             > 项目构建地址: [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL})
+  #             > 构建者: ${CNB_BUILD_USER}
+
+
+  # web_trigger_six: ###构建运维所有镜像  
+  #   - docker:
+  #       image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest
+  #     services:
+  #       - docker
+  #     imports: 
+  #       - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/qingcloud-dockerhub.yaml
+  #       - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/wecom-message.yaml
+  #     runner:
+  #       cpus: 64
+  #     stages:
+  #       - name: 打印环境变量
+  #         script: env
+  #       - name: 登录CNB镜像仓库
+  #         script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
+  #       - name: 登录qingcloud镜像仓库
+  #         script: docker login -u ${Qingcloud_Dockerhub_USER_NAME} -p "${Qingcloud_Dockerhub_PASSWORD}" ${Qingcloud_Dockerhub_REGISTRY}
+  #       - name: 打印即将要构建的应用
+  #         script: echo "即将要构建的应用:$build_application_name"
+  #         # 构建所有镜像
+  #       - name: 构建所有镜像
+  #         jobs:
+  #           kafka:
+  #             script: cd  sre/vmware_exporter && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+  #           emqx:
+  #             script: cd sre/emqx && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m             
+  #           clickhouse:
+  #             script: cd sre/clickhouse && bash build.sh
+  #             allowFailure: true
+  #             timeout: 15m
+
+  #       - name: 查看所有镜像构建结果      
+  #         script: cat /tmp/CUSTOM_ENV_RESULT_INFO
+  #         exports:
+  #           code: CUSTOM_ENV_RESULT_CODE_ALL
+  #           info: CUSTOM_ENV_RESULT_INFO_ALL
+            
+  #       - name: 打印所有镜像构建结果
+  #         script:
+  #           - echo $CUSTOM_ENV_RESULT_CODE_ALL
+  #           - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO_ALL"
+
+  #       - name: 企微通知
+  #         image: tencentcom/wecom-message
+  #         settings:
+  #           robot: ${qw_webhook_token}
+  #           msgType: markdown
+  #           content: |
+  #             # 构建状态<font color="info">成功</font>，请相关同事注意
+  #             > 项目构建地址: [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL})
+  #             > 镜像地址: ${CUSTOM_ENV_RESULT_INFO_ALL}
+  #             > 构建者: ${CNB_BUILD_USER}
+
+  #     failStages:
+  #       - name: 企微通知
+  #         image: tencentcom/wecom-message
+  #         settings:
+  #           robot: ${qw_webhook_token}
+  #           msgType: markdown
+  #           content: |
+  #             # 构建状态<font color="warning">失败</font>，请相关同事注意
+  #             > 项目构建地址: [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL})
+  #             > 构建者: ${CNB_BUILD_USER}

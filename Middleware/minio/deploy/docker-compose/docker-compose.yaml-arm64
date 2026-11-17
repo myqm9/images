@@ -1,0 +1,46 @@
+services:
+  minio:
+    image: harbor.tsingyun.net/tsingyun-middleware/minio:RELEASE.2025-10-15T17-29-55Z-arm64
+    container_name: minio
+    networks:
+      - tsingyun
+    ports:
+      - 9000:9000
+      - 9001:9001
+    volumes:
+      - /home/application/Middleware/minio/data:/data
+      - /home/application/Middleware/minio/mc-config:/tmp/.mc:rw
+      - /etc/localtime:/etc/localtime:ro
+      - /usr/share/zoneinfo:/usr/share/zoneinfo:ro
+    environment:
+      MINIO_ROOT_USER: tsingyun
+      MINIO_ROOT_PASSWORD: 'xxx'
+      TZ: Asia/Shanghai
+    command: server /data --console-address :9001    
+    healthcheck:  # 健康检查确保初始化服务在MinIO就绪后运行
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  minio-init:
+    image: harbor.tsingyun.net/tsingyun-middleware/minio:RELEASE.2025-10-15T17-29-55Z-arm64
+    container_name: minio-init
+    depends_on:
+      minio:
+        condition: service_healthy  # 依赖MinIO健康状态
+    networks:
+      - tsingyun
+    volumes:
+      - /home/application/Middleware/minio/mc-config:/tmp/.mc:rw
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set minio http://minio:9000 tsingyun 'xxx';
+      /usr/bin/mc mb minio/tsingyun;
+      /usr/bin/mc ls minio;
+      exit 0;
+      "
+networks:
+  tsingyun:
+    external: true

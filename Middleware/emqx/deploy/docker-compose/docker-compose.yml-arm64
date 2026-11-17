@@ -1,0 +1,22 @@
+services:
+  emqx:
+    image: "dockerhub.qingcloud.com/tsingyun_middleware/emqx:5.8.9-arm64"
+    container_name: "emqx"
+    networks:
+      - tsingyun
+    ports:
+     - 18083:18083
+     - 1883:1883
+     - 18080:8081
+     - 18883:8883
+    environment:
+     - TZ=Asia/Shanghai
+    volumes:
+     - /home/application/Middleware/emqx/log:/opt/emqx/log
+     - /home/application/Middleware/emqx/data:/opt/emqx/data
+     - /etc/localtime:/etc/localtime:ro
+    restart: always
+
+networks:
+  tsingyun:
+    external: true

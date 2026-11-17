@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tsingyun-redis-sts
+  namespace: default
+  labels:
+    name: tsingyun-redis-sts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tsingyun-redis-sts
+  template:
+    metadata:
+      labels:
+        name: tsingyun-redis-sts
+    spec:
+      imagePullSecrets:
+        - name: tsingyun-harbor-secret
+      containers:
+        - name: tsingyun-redis-sts
+          image: harbor.tsingyun.net/tsingyun-middleware/redis:8.10.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          env:
+            - name: TZ
+              value: "Asia/Shanghai"
+          command:
+            - redis-server
+            - --requirepass
+            - "xxxx"
+            - --port
+            - "6379"
+            - --appendonly
+            - "yes"
+            - --dbfilename
+            - "dump.rdb"
+            - --dir
+            - /data
+            - --timeout
+            - "0"
+            - --save
+            - "900 1"
+            - --save
+            - "300 10"
+            - --save
+            - "60 10000"
+          resources:
+            limits:
+              cpu: "1"
+              memory: 4096Mi
+            requests:
+              cpu: "500m"
+              memory: 2048Mi
+          readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            exec:
+              command:
+                - redis-cli
+                - -h
+                - 127.0.0.1
+                - -p
+                - "6379"
+                - -a
+                - "xxxx" # 密码
+                - ping
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            exec:
+              command:
+                - redis-cli
+                - -h
+                - 127.0.0.1
+                - -p
+                - "6379"
+                - -a
+                - "6yhnBGT*09"
+                - ping
+          volumeMounts:
+            - name: data-20g-pvc
+              mountPath: /data
+            - name: localtime
+              mountPath: /etc/localtime
+              readOnly: true
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+  volumeClaimTemplates:
+    - metadata:
+        name: data-20g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 20Gi
+

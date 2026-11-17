@@ -1,0 +1,164 @@
+# .cnb/web_trigger.yml
+branch:
+  - buttons:
+      - name: 构建单个【中间件】AMD64
+        description: 构建单个【中间件】AMD64
+        event: web_trigger_amd_three # 触发的 CI 事件名
+        inputs:
+          #输入框（input）
+          build_application_name:
+            # 下拉选择框
+            description: 输入【中间件】应用名称-AMD64
+            required: false
+            type: select
+            default:
+            options:
+              - name: kafka
+                value: kafka
+              - name: clickhouse
+                value: clickhouse
+              - name: influxdb
+                value: influxdb
+              - name: postgres
+                value: postgres
+              - name: postgis
+                value: postgis
+              - name: redis
+                value: redis
+              - name: apollo
+                value: apollo
+              - name: nacos
+                value: nacos
+              - name: emqx
+                value: emqx
+              - name: fastdfs
+                value: fastdfs
+              - name: openjdk
+                value: openjdk
+              - name: geoserver
+                value: geoserver
+              - name: nginx
+                value: nginx
+              - name: libreoffice
+                value: libreoffice
+              - name: minio
+                value: minio
+          build_version:
+            description: 输入版本号（如 3.9.2），为空则直接构建
+            required: false
+            type: text
+            default:
+      - name: 构建单个【中间件】ARM64
+        description: 构建单个【中间件】ARM64
+        event: web_trigger_arm_three # 触发的 CI 事件名
+        inputs:
+          #输入框（input）
+          build_application_name:
+            # 下拉选择框
+            description: 输入【中间件】应用名称-ARM64
+            required: false
+            type: select
+            default:
+            options:
+              - name: kafka
+                value: kafka
+              - name: clickhouse
+                value: clickhouse
+              - name: influxdb
+                value: influxdb
+              - name: postgres
+                value: postgres
+              - name: postgis
+                value: postgis
+              - name: redis
+                value: redis
+              - name: apollo
+                value: apollo
+              - name: nacos
+                value: nacos
+              - name: emqx
+                value: emqx
+              - name: fastdfs
+                value: fastdfs
+              - name: openjdk
+                value: openjdk
+              - name: geoserver
+                value: geoserver
+              - name: nginx
+                value: nginx
+              - name: libreoffice
+                value: libreoffice
+              - name: minio
+                value: minio
+          build_version:
+            description: 输入版本号（如 3.9.2），为空则直接构建
+            required: false
+            type: text
+            default:
+
+      # - name: 构建【中间件/数据库】所有镜像
+      #   description: 构建所有镜像
+      #   event: web_trigger_four # 触发的 CI 事件名
+      #   inputs:
+      #     build_application_name:
+      #       # 下拉选择框
+      #       description: 构建所有镜像
+      #       required: true
+      #       type: select
+      #       default: all
+      #       options:
+      #         - name: 构建所有镜像
+      #           value: all
+      - name: 构建运维AMD64镜像
+        description: 构建运维AMD64镜像
+        event: web_trigger_amd_five # 触发的 CI 事件名
+        inputs:
+          #输入框（input）
+          build_application_name:
+            # 下拉选择框
+            description: 输入【运维】应用名称-AMD64
+            required: false
+            type: select
+            default:
+            options:
+              - name: vmware_exporter
+                value: vmware_exporter
+          build_version:
+            description: 输入版本号（如 3.9.2），为空则直接构建
+            required: false
+            type: text
+            default:
+
+      - name: 构建运维ARM64镜像
+        description: 构建运维ARM64镜像
+        event: web_trigger_arm_five # 触发的 CI 事件名
+        inputs:
+          #输入框（input）
+          build_application_name:
+            # 下拉选择框
+            description: 输入【运维】应用名称-ARM64
+            required: false
+            type: select
+            default:
+            options:
+              - name: vmware_exporter
+                value: vmware_exporter
+          build_version:
+            description: 输入版本号（如 3.9.2），为空则直接构建
+            required: false
+            type: text
+            default:
+
+      # - name: 构建【运维】所有镜像
+      #   description: 构建【运维】所有镜像
+      #   event: web_trigger_six # 触发的 CI 事件名
+      #   inputs:
+      #     build_application_name:
+      #       # 下拉选择框
+      #       description: 构建运维所有镜像
+      #       required: true
+      #       type: select
+      #       default: all
+      #       options:
+      #         - name: 构建所有镜像
+      #           value: all

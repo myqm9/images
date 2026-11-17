@@ -1,0 +1,24 @@
+services:
+  geoserver:
+    container_name: geoserver  # 指定容器名称
+    image: dockerhub.qingcloud.com/tsingyun_middleware/geoserver:2.27.1
+    networks:
+      - tsingyun
+    ports:
+      - "8080:8080"  # 端口映射（宿主机:容器）
+    environment:
+      - GEOSERVER_ADMIN_USER=admin
+      - GEOSERVER_ADMIN_PASSWORD=xxxx
+      - SKIP_DEMO_DATA=true
+      - CORS_ENABLED=true
+      - TZ=Asia/Shanghai
+      - EXTRA_JAVA_OPTS=-Xms1G -Xmx2G
+    volumes:
+      - /home/application/Middleware/geoserver/data:/opt/geoserver_data/  # tomcat数据卷挂载
+      - /home/application/Middleware/geoserver/map-data:/map # 地图数据卷挂载
+    restart: always
+
+    
+networks:
+  tsingyun:
+    external: true

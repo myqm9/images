@@ -1,0 +1,44 @@
+FROM dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+
+# 定义apollo-portal-VERSION版本
+ARG VERSION=2.3.0
+
+ENV APOLLO_RUN_MODE "Docker"
+ENV SERVER_PORT 8080
+ENV JAVA_OPTS="$JAVA_OPTS -Dapollo_profile=github,auth -XX:ParallelGCThreads=4 -XX:MaxTenuringThreshold=9 -XX:+DisableExplicitGC -XX:+ScavengeBeforeFullGC -XX:SoftRefLRUPolicyMSPerMB=0 -XX:+ExplicitGCInvokesConcurrent -XX:+HeapDumpOnOutOfMemoryError -XX:-OmitStackTraceInFastThrow -Duser.timezone=Asia/Shanghai -Dclient.encoding.override=UTF-8 -Dfile.encoding=UTF-8 -Djava.security.egd=file:/dev/./urandom"
+
+
+# 安装必要的工具
+RUN dnf update -y && \
+    # 安装必要的工具
+    dnf install -y bash curl unzip wget && \
+    mkdir /apollo-portal && \
+    # 设置时区
+    ln -sf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo "$TZ" > /etc/timezone && \
+    # 创建 locale 配置文件
+    echo "LANG=zh_CN.UTF-8" > /etc/locale.conf && \
+    echo "LC_TIME=zh_CN.UTF-8" >> /etc/locale.conf && \
+    # 清理缓存
+    dnf clean all && \
+    rm -rf /var/cache/dnf
+
+# 下载并安装 apollo-portal
+RUN set -x \
+    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/apollo-portal-2.3.0-github.zip" \
+    && unzip apollo-portal-2.3.0-github.zip -d apollo-portal \
+    && mv apollo-portal/apollo-portal-2.3.0.jar /apollo-portal \
+    && rm -rf apollo-portal-2.3.0-github.zip apollo-portal
+
+    
+#复制启动脚本到容器
+COPY ./scripts /apollo-portal/scripts
+
+EXPOSE $SERVER_PORT
+
+# 确保脚本具有执行权限
+RUN chmod +x /apollo-portal/scripts/*.sh
+
+# 设置容器的默认启动命令
+CMD ["/apollo-portal/scripts/startup.sh"]
+

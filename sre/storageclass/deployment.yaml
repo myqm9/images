@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nfs-client-provisioner
+  labels:
+    app: nfs-client-provisioner
+  # replace with namespace where provisioner is deployed
+  namespace: kube-nfs
+spec:
+  replicas: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: nfs-client-provisioner
+  template:
+    metadata:
+      labels:
+        app: nfs-client-provisioner
+    spec:
+      serviceAccountName: nfs-client-provisioner
+      containers:
+        - name: nfs-client-provisioner
+          #image: registry.k8s.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
+          image: docker.cnb.cool/sre-demo/k8s-demo/registry.k8s.io-sig-storage-nfs-subdir-external-provisioner:v4.0.2_amd64
+          volumeMounts:
+            - name: nfs-client-root
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME
+              value: k8s-sigs.io/nfs-subdir-external-provisioner
+            - name: NFS_SERVER
+              value: 172.22.33.100
+            - name: NFS_PATH
+              value: /home/application/nfs/data
+      volumes:
+        - name: nfs-client-root
+          nfs:
+            server: 172.22.33.100
+            path: /home/application/nfs/data

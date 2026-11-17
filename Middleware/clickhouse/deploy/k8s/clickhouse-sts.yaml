@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tsingyun-clickhouse-sts
+  namespace: default
+  labels:
+    name: tsingyun-clickhouse-sts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tsingyun-clickhouse-sts
+  template:
+    metadata:
+      labels:
+        name: tsingyun-clickhouse-sts
+    spec:
+      imagePullSecrets:
+        - name: tsingyun-harbor-secret
+      containers:
+        - name: tsingyun-clickhouse-sts
+          image: harbor.tsingyun.net/tsingyun-middleware/clickhouse:24.5.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8123
+              protocol: TCP
+          env:
+            - name: CLICKHOUSE_USER
+              value: "default"
+            - name: CLICKHOUSE_PASSWORD
+              value: "xxxxxxx"
+            - name: CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT
+              value: "1"
+          resources:
+            limits:
+              cpu: "2"
+              memory: 4096Mi
+            requests:
+              cpu: "1"
+              memory: 2048Mi
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            tcpSocket:
+              port: 8123
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 20
+            timeoutSeconds: 5
+            tcpSocket:
+              port: 8123
+          volumeMounts:
+            - name: data-50g-pvc
+              mountPath: /var/lib/clickhouse
+  volumeClaimTemplates:
+    - metadata:
+        name: data-50g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 50Gi

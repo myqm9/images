@@ -1,0 +1,29 @@
+FROM dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+
+# 定义SCALA,KAFKA版本
+ARG KAFKA_VERSION=3.9.2
+ARG SCALA_VERSION=2.13
+
+
+# 下载Kafka
+RUN dnf update -y && \
+    # 下载Kafka
+    wget https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz -O /tmp/kafka.tgz && \
+    mkdir /opt/kafka && \
+    tar -xf /tmp/kafka.tgz -C /opt/kafka --strip-components=1 && \
+    rm -rf /tmp/kafka.tgz
+
+
+# 定义卷
+VOLUME ["/var/lib/kafka/data"]
+VOLUME ["/tmp/kraft-combined-logs"]
+
+
+
+
+# 复制Kafka启动脚本到容器
+COPY start_kafka.sh /opt/kafka
+RUN  chmod +x /opt/kafka/start_kafka.sh
+
+# 设置容器的默认启动命令
+CMD ["/opt/kafka/start_kafka.sh"]

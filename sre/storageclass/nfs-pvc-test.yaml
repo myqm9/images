@@ -1,0 +1,36 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: test-claim
+spec:
+  storageClassName: nfs-dynamic
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi
+
+---
+kind: Pod
+apiVersion: v1
+metadata:
+  name: test-pod
+spec:
+  containers:
+  - name: test-pod
+    #image: busybox:stable
+    image: docker.cnb.cool/sre-demo/k8s-demo/busybox:stable_amd64
+    command:
+      - "/bin/sh"
+    args:
+      - "-c"
+      - "touch /mnt/SUCCESS && exit 0 || exit 1"
+    volumeMounts:
+      - name: nfs-pvc
+        mountPath: "/mnt"
+  restartPolicy: "Never"
+  volumes:
+    - name: nfs-pvc
+      persistentVolumeClaim:
+        claimName: test-claim

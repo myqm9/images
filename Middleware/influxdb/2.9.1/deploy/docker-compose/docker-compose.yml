@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  influxdb:
+    image: dockerhub.qingcloud.com/tsingyun_middleware/influxdb:2.9.1
+    container_name: influxdb
+    restart: always
+    ports:
+      - "8086:8086"
+    volumes:
+      - /home/application/Database/influxdb/data:/var/lib/influxdb2
+    environment:
+      INFLUXD_PPROF_DISABLED: "true"
+      DOCKER_INFLUXDB_INIT_MODE: "setup"
+      DOCKER_INFLUXDB_INIT_USERNAME: "tsingyun"
+      DOCKER_INFLUXDB_INIT_PASSWORD: "xxx"
+      DOCKER_INFLUXDB_INIT_ORG: "tsingyun"
+      DOCKER_INFLUXDB_INIT_BUCKET: "tsingyun"
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: "1iSB6On81BBxZUB60opKnRmWZLynY4Zw0yr99XFL9_CUJgEz3xPWsX-J7OMAdhsvYhKBtBpSkaQF9nm-xvGWtQ=="
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/ping"]
+      interval: 30s
+      retries: 3
+      start_period: 30s
+      timeout: 10s
+    networks:
+      - tsingyun
+
+networks:
+  tsingyun:
+    external: true

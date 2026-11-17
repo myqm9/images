@@ -1,0 +1,20 @@
+services:
+  clickhouse:
+    image: dockerhub.qingcloud.com/tsingyun_middleware/clickhouse:24.5.1
+    container_name: clickhouse
+    restart: always
+    environment:
+      CLICKHOUSE_USER: 'default'
+      CLICKHOUSE_PASSWORD: 'xxxxxxx'
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    networks:
+      - tsingyun
+    ports:
+      - "8123:8123"
+    volumes:
+      - /home/application/Database/clickhouse/log:/var/log/clickhouse-server
+      - /home/application/Database/clickhouse/data:/var/lib/clickhouse
+
+networks:
+  tsingyun:
+    external: true

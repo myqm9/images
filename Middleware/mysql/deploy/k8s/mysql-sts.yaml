@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tsingyun-mysql-sts
+  namespace: default
+  labels:
+    name: tsingyun-mysql-sts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tsingyun-mysql-sts
+  template:
+    metadata:
+      labels:
+        name: tsingyun-mysql-sts
+    spec:
+      imagePullSecrets:
+        - name: tsingyun-harbor-secret
+      securityContext:
+        fsGroup: 999
+      containers:
+        - name: tsingyun-mysql-sts
+          image: harbor.tsingyun.net/tsingyun-middleware/mysql:8.0.44
+          imagePullPolicy: IfNotPresent
+          args:
+            - --max-connections=1000
+            - --disable_log_bin
+            - --lower_case_table_names=1
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_general_ci
+            - --log_timestamps=SYSTEM
+            - --max-user-connections=500
+            - --wait-timeout=300
+            - --interactive-timeout=300
+            - --max-allowed-packet=256M
+            - --innodb-buffer-pool-size=2G
+            - --table_open_cache=16384
+            - --table_definition_cache=16384
+            - --innodb_redo_log_capacity=1G
+            - --join_buffer_size=512K
+            - --innodb_log_buffer_size=16M
+          ports:
+            - name: mysql
+              containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "xxxx"
+          resources:
+            limits:
+              cpu: "4"
+              memory: 8Gi
+            requests:
+              cpu: "4"
+              memory: 8Gi
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+            tcpSocket:
+              port: 3306
+          livenessProbe:
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 3
+            tcpSocket:
+              port: 3306
+          volumeMounts:
+            - name: data-100g-pvc
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: data-100g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 100Gi

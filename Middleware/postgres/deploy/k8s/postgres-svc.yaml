@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tsingyun-postgres-svc
+  namespace: default
+  labels:
+    name: tsingyun-postgres-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: tsingyun-postgres-sts
+  ports:
+    - name: postgres-internal
+      port: 5432
+      targetPort: 5432
+      protocol: TCP

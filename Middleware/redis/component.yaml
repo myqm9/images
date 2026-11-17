@@ -1,0 +1,8 @@
+name: redis
+title: Redis
+category: middleware
+ports: [6379]
+architectures: [amd64, arm64]
+deployFiles:
+  - deploy/docker-compose/docker-compose.yaml
+  - deploy/k8s/redis-sts.yaml

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tsingyun-postgis-svc
+  namespace: default
+  labels:
+    name: tsingyun-postgis-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: tsingyun-postgis-sts
+  ports:
+    - name: postgis-internal
+      port: 5432
+      targetPort: 5432
+      protocol: TCP

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tsingyun-minio-svc-nodeport
+  namespace: default
+  labels:
+    name: tsingyun-minio-svc-nodeport
+spec:
+  type: NodePort
+  ports:
+    - port: 9000
+      targetPort: 9000
+      nodePort: 30900
+      name: minio-api
+    - port: 9001
+      targetPort: 9001
+      nodePort: 30901
+      name: minio-console
+  selector:
+    name: tsingyun-minio-sts

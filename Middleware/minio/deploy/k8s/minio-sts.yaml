@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: tsingyun-minio-sts
+  namespace: default
+  labels:
+    name: tsingyun-minio-sts
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tsingyun-minio-sts
+  template:
+    metadata:
+      labels:
+        name: tsingyun-minio-sts
+    spec:
+      imagePullSecrets:
+        - name: tsingyun-harbor-secret
+      containers:
+        - name: tsingyun-minio-sts
+          image: harbor.tsingyun.net/tsingyun-middleware/minio:RELEASE.2025-10-15T17-29-55Z
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: api
+              containerPort: 9000
+              protocol: TCP
+            - name: console
+              containerPort: 9001
+              protocol: TCP
+          env:
+            - name: MINIO_ROOT_USER
+              value: "tsingyun"
+            - name: MINIO_ROOT_PASSWORD
+              value: "xxxx"
+            - name: TZ
+              value: "Asia/Shanghai"
+          command:
+            - minio
+            - server
+            - /data
+            - --console-address
+            - ":9001"
+          volumeMounts:
+            - name: data-100g-pvc
+              mountPath: /data
+              subPath: data
+            - name: data-100g-pvc
+              mountPath: /tmp/.mc
+              subPath: mc-config
+            - name: localtime
+              mountPath: /etc/localtime
+              readOnly: true
+            - name: zoneinfo
+              mountPath: /usr/share/zoneinfo
+              readOnly: true
+          livenessProbe:
+            exec:
+              command:
+                - curl
+                - -f
+                - http://localhost:9000/minio/health/live
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 10
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+        - name: zoneinfo
+          hostPath:
+            path: /usr/share/zoneinfo
+            type: Directory
+  volumeClaimTemplates:
+    - metadata:
+        name: data-100g-pvc
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: nfs-dynamic
+        resources:
+          requests:
+            storage: 100Gi

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tsingyun-geoserver-svc
+  namespace: default
+  labels:
+    name: tsingyun-geoserver-svc
+spec:
+  type: ClusterIP
+  selector:
+    name: tsingyun-geoserver-sts
+  ports:
+    - name: geoserver-http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP

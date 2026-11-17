@@ -1,0 +1,119 @@
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "make update"! PLEASE DO NOT EDIT IT DIRECTLY.
+#
+
+# ARG BASE_IMAGE
+#ARG BASE_IMAGE=postgres:15-alpine3.24
+ARG BASE_IMAGE=harbor.tsingyun.net/tsingyun-middleware/postgres:15.18-alpine3.24-arm64
+
+
+FROM ${BASE_IMAGE}
+
+LABEL maintainer="PostGIS Project - https://postgis.net" \
+      org.opencontainers.image.description="PostGIS 3.5.7 spatial database extension with PostgreSQL 15 Alpine" \
+      org.opencontainers.image.source="https://github.com/postgis/docker-postgis"
+
+ENV POSTGIS_VERSION=3.5.7
+ENV POSTGIS_SHA256=22f99b7f72a123f69cadb39c1b48bb01752a942d5d7967f939dd6e224a005121
+ENV PGROUTING_VERSION=3.7.1
+
+
+RUN set -eux \
+    # 使用国内镜像源
+    # && sed -i 's/dl-cdn.alpinelinux.org/mirrors.nju.edu.cn/g' /etc/apk/repositories \
+    && sed -i 's@dl-cdn.alpinelinux.org@mirrors.cloud.tencent.com@g' /etc/apk/repositories \
+    # 更新并安装依赖
+    && apk update && apk upgrade \
+    && apk add --no-cache \
+        boost-dev \
+        cmake \
+        ca-certificates \
+        openssl \
+        tar \
+        wget \
+        gdal-dev \
+        geos-dev \
+        proj-dev \
+        proj-util \
+        sfcgal-dev \
+        autoconf \
+        automake \
+        cunit-dev \
+        file \
+        g++ \
+        gcc \
+        gettext-dev \
+        git \
+        json-c-dev \
+        libtool \
+        libxml2-dev \
+        make \
+        pcre2-dev \
+        perl \
+        protobuf-c-dev \
+    && apk add --no-cache --virtual .build-deps \
+        $DOCKER_PG_LLVM_DEPS \
+    # 下载pgrouting源代码
+    && wget -O pgrouting.tar.gz "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/pgrouting-${PGROUTING_VERSION}.tar.gz" \
+    && echo "Extracting pgrouting" \
+    && tar -xvzf pgrouting.tar.gz \
+    && cd pgrouting-* \
+    && mkdir build \
+    && cd build \
+    && cmake -DCMAKE_CXX_FLAGS="-include cstdint" -DCMAKE_POLICY_VERSION_MINIMUM=3.5 .. \
+    && make -j$(nproc) \
+    && make install \
+    && cd ../.. \
+    && rm -rf pgrouting* \
+    # 下载和校验 PostGIS 源代码
+    && wget -O postgis.tar.gz "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/postgis-${POSTGIS_VERSION}.tar.gz" \
+    && echo "${POSTGIS_SHA256} *postgis.tar.gz" | sha256sum -c - \
+    && mkdir -p /usr/src/postgis \
+    && tar --extract --file postgis.tar.gz --directory /usr/src/postgis --strip-components 1 \
+    && rm postgis.tar.gz \
+    # 构建和安装 PostGIS
+    && cd /usr/src/postgis \
+    && gettextize \
+    && ./autogen.sh \
+    && ./configure --enable-lto \
+    && make -j$(nproc) \
+    && make install \
+    # 刷新 proj 数据并执行回归测试
+    && projsync --system-directory --file ch_swisstopo_CHENyx06_ETRS \
+    && projsync --system-directory --file us_noaa_eshpgn \
+    && projsync --system-directory --file us_noaa_prvi \
+    && projsync --system-directory --file us_noaa_wmhpgn \
+    && mkdir /tempdb \
+    && chown -R postgres:postgres /tempdb \
+    && su postgres -c 'pg_ctl -D /tempdb init' \
+    && su postgres -c 'pg_ctl -D /tempdb start -l /tmp/logfile -o "-F"' \
+    && cd regress \
+    && make -j$(nproc) check RUNTESTFLAGS=--extension PGUSER=postgres \
+    && su postgres -c 'psql -c "CREATE EXTENSION IF NOT EXISTS postgis;"' \
+    && su postgres -c 'psql -c "CREATE EXTENSION IF NOT EXISTS postgis_raster;"' \
+    && su postgres -c 'psql -c "CREATE EXTENSION IF NOT EXISTS postgis_sfcgal;"' \
+    && su postgres -c 'psql -c "CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;"' \
+    && su postgres -c 'psql -c "CREATE EXTENSION IF NOT EXISTS address_standardizer;"' \
+    && su postgres -c 'psql -c "CREATE EXTENSION IF NOT EXISTS address_standardizer_data_us;"' \
+    && su postgres -c 'psql -c "CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;"' \
+    && su postgres -c 'psql -c "CREATE EXTENSION IF NOT EXISTS postgis_topology;"' \
+    && su postgres -c 'psql -c "CREATE EXTENSION IF NOT EXISTS pgrouting;"' \
+    && su postgres -c 'pg_ctl -D /tempdb --mode=immediate stop' \
+    && rm -rf /tempdb /tmp/logfile \
+    # 安装运行时依赖
+    && apk add --no-cache \
+        gdal \
+        geos \
+        proj \
+        sfcgal \
+        json-c \
+        libstdc++ \
+        pcre2 \
+        protobuf-c \
+        ca-certificates \
+    # 清理构建依赖
+    && apk del .build-deps \
+    && rm -rf /usr/src/postgis /var/cache/apk/*
+
+COPY ./initdb-postgis.sh /docker-entrypoint-initdb.d/10_postgis.sh
+COPY ./update-postgis.sh /usr/local/bin

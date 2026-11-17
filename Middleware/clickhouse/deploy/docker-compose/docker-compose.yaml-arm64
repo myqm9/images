@@ -1,0 +1,20 @@
+services:
+  clickhouse:
+    image: harbor.tsingyun.net/tsingyun-middleware/clickhouse:23.3.9.55-arm64
+    container_name: clickhouse
+    restart: always
+    environment:
+      CLICKHOUSE_USER: 'default'
+      CLICKHOUSE_PASSWORD: 'xxxxxxx'
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: '1'
+    networks:
+      - tsingyun
+    ports:
+      - "8123:8123"
+    volumes:
+      - /home/application/Database/clickhouse/log:/var/log/clickhouse-server
+      - /home/application/Database/clickhouse/data:/var/lib/clickhouse
+
+networks:
+  tsingyun:
+    external: true

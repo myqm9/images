@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tsingyun-minio-svc
+  namespace: default
+  labels:
+    name: tsingyun-minio-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9000
+      targetPort: 9000
+      name: minio-api
+    - port: 9001
+      targetPort: 9001
+      name: minio-console
+  selector:
+    name: tsingyun-minio-sts

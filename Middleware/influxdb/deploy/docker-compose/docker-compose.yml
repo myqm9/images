@@ -1,0 +1,92 @@
+services:
+  influxdb:
+    image: harbor.tsingyun.net/tsingyun-middleware/influxdb:3.9.0
+    container_name: influxdb
+    restart: always
+    ports:
+      - "8181:8181"
+    command:
+      - influxdb3
+      - serve
+      - --node-id=node0
+      - --object-store=file
+      - --data-dir=/var/lib/influxdb3/data
+      - --plugin-dir=/var/lib/influxdb3/plugins
+    volumes:
+      - /home/application/Database/influxdb/data:/var/lib/influxdb3/data
+      - /home/application/Database/influxdb/plugins:/var/lib/influxdb3/plugins
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "8181"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - tsingyun
+
+  influxdb-explorer:
+    image: harbor.tsingyun.net/tsingyun-middleware/influxdb:influxdb3-ui-1.6.3
+    container_name: influxdb-explorer
+    command: --mode=admin
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - tsingyun
+
+  influxdb-proxy:
+    image: harbor.tsingyun.net/tsingyun-middleware/nginx:1.29.1
+    container_name: influxdb-proxy
+    depends_on:
+      - influxdb-explorer
+    entrypoint:
+      - sh
+      - -euc
+      - |
+        # 生成 htpasswd (用户名: admin, 密码: xxxx)
+        printf "admin:$$(openssl passwd -apr1 xxxx)\n" > /etc/nginx/.htpasswd
+
+        cat <<EOF > /etc/nginx/nginx.conf
+        user  nginx;
+        worker_processes  5;
+
+        events {
+          worker_connections   1000;
+        }
+
+        http {
+          resolver 127.0.0.11;
+
+          server {
+            listen             3100;
+
+            # Basic Auth
+            auth_basic "InfluxDB Explorer - Restricted Access";
+            auth_basic_user_file /etc/nginx/.htpasswd;
+
+            location / {
+                    proxy_pass http://influxdb-explorer/;
+            }
+          }
+        }
+        EOF
+        /docker-entrypoint.sh nginx -g "daemon off;"
+    ports:
+      - "3100:3100"
+    healthcheck:
+      test: ["CMD", "service", "nginx", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tsingyun
+
+networks:
+  tsingyun:
+    external: true
