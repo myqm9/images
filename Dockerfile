@@ -2,7 +2,7 @@
 FROM alpine:latest
 
 # 维护者信息
-LABEL maintainer="srebro"
+LABEL maintainer="myqm"
 LABEL description="Custom Skopeo image based on Alpine Linux"
 
 # 更换为腾讯云镜像源并更新系统

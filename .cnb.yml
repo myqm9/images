@@ -9,10 +9,8 @@ main:
         image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest
       services:
         - docker
-      imports: 
-        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/qingcloud-dockerhub.yaml
-        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/wecom-message.yaml
-        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/tsingyun-harbor.yaml
+      imports:
+        - https://cnb.cool/myqm/key/-/blob/main/docker_images_key.yaml
       stages:
         - name: 记录构建开始时间
           script: date +%s
@@ -22,10 +20,8 @@ main:
           script: env
         - name: 登录CNB镜像仓库
           script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
-        - name: 登录qingcloud镜像仓库
-          script: docker login -u ${Qingcloud_Dockerhub_USER_NAME} -p "${Qingcloud_Dockerhub_PASSWORD}" ${Qingcloud_Dockerhub_REGISTRY}
-        - name: 登录tsingyun-harbor镜像仓库
-          script: docker login -u ${Tsingyun_Harbor_USER_NAME} -p "${Tsingyun_Harbor_PASSWORD}" ${Tsingyun_Harbor_REGISTRY}
+        - name: 登录腾讯云TCR镜像仓库
+          script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
         - name: 打印即将要构建的应用
           script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
         - name: 构建指定镜像
@@ -61,30 +57,6 @@ main:
           exports:
             info: CNB_BUILD_DURATION
 
-        - name: 企微通知
-          image: tencentcom/wecom-message
-          settings:
-            robot: ${qw_webhook_token}
-            msgType: markdown_v2
-            content: |
-              🎉 AMD64镜像，构建成功
-              | 项目构建地址 | 镜像地址 | 构建耗时 |
-              | ------------ | -------- | -------- |
-              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CUSTOM_ENV_RESULT_INFO} | ${CNB_BUILD_DURATION} |
-
-
-      failStages:
-        - name: 企微通知
-          image: tencentcom/wecom-message
-          settings:
-            robot: ${qw_webhook_token}
-            msgType: markdown_v2
-            content: |
-              # ❌ AMD64镜像，构建失败，请相关同事注意
-              | 项目构建地址 | 构建耗时 |
-              | ------------ | -------- |
-              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CNB_BUILD_DURATION} |
-
   web_trigger_arm_three: ##构建中间件单个镜像-arm64
     - runner:
         tags: cnb:arch:arm64:v8
@@ -93,10 +65,8 @@ main:
         image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest-arm64
       services:
         - docker
-      imports: 
-        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/qingcloud-dockerhub.yaml
-        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/wecom-message.yaml
-        - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/tsingyun-harbor.yaml
+      imports:
+        - https://cnb.cool/myqm/key/-/blob/main/docker_images_key.yaml
       stages:
         - name: 记录构建开始时间
           script: date +%s
@@ -106,10 +76,8 @@ main:
           script: env
         - name: 登录CNB镜像仓库
           script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
-        - name: 登录qingcloud镜像仓库
-          script: docker login -u ${Qingcloud_Dockerhub_USER_NAME} -p "${Qingcloud_Dockerhub_PASSWORD}" ${Qingcloud_Dockerhub_REGISTRY}
-        - name: 登录tsingyun-harbor镜像仓库
-          script: docker login -u ${Tsingyun_Harbor_USER_NAME} -p "${Tsingyun_Harbor_PASSWORD}" ${Tsingyun_Harbor_REGISTRY}
+        - name: 登录腾讯云TCR镜像仓库
+          script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
         - name: 打印即将要构建的应用
           script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
         - name: 构建指定镜像
@@ -145,38 +113,13 @@ main:
           exports:
             info: CNB_BUILD_DURATION
 
-        - name: 企微通知
-          image: tencentcom/wecom-message
-          settings:
-            robot: ${qw_webhook_token}
-            msgType: markdown_v2
-            content: |
-              🎉 ARM64镜像，构建成功
-              | 项目构建地址 | 镜像地址 | 构建耗时 |
-              | ------------ | -------- | -------- |
-              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CUSTOM_ENV_RESULT_INFO} | ${CNB_BUILD_DURATION} |
-
-
-      failStages:
-        - name: 企微通知
-          image: tencentcom/wecom-message
-          settings:
-            robot: ${qw_webhook_token}
-            msgType: markdown_v2
-            content: |
-              # ❌ ARM64镜像，构建失败
-              | 项目构建地址 | 构建耗时 |
-              | ------------ | -------- |
-              | [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL}) | ${CNB_BUILD_DURATION} |
-
   # web_trigger_four: ###构建中间件所有镜像  
   #   - docker:
   #       image: docker.cnb.cool/tsingyun/devops/tsingyun-images/skopeo:latest
   #     services:
   #       - docker
-  #     imports: 
-  #       - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/qingcloud-dockerhub.yaml
-  #       - https://cnb.cool/tsingyun/devops/credentials/-/blob/main/wecom-message.yaml
+  #     imports:
+  #       - https://cnb.cool/myqm/key/-/blob/main/docker_images_key.yaml
   #     runner:
   #       cpus: 64
   #     stages:
@@ -184,8 +127,8 @@ main:
   #         script: env
   #       - name: 登录CNB镜像仓库
   #         script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
-  #       - name: 登录qingcloud镜像仓库
-  #         script: docker login -u ${Qingcloud_Dockerhub_USER_NAME} -p "${Qingcloud_Dockerhub_PASSWORD}" ${Qingcloud_Dockerhub_REGISTRY}
+  #       - name: 登录腾讯云TCR镜像仓库
+  #         script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
   #       - name: 打印即将要构建的应用
   #         script: echo "即将要构建的应用:$build_application_name"
   #         # 构建所有镜像
@@ -257,26 +200,4 @@ main:
   #         script:
   #           - echo $CUSTOM_ENV_RESULT_CODE_ALL
   #           - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO_ALL"
-
-  #       - name: 企微通知
-  #         image: tencentcom/wecom-message
-  #         settings:
-  #           robot: ${qw_webhook_token}
-  #           msgType: markdown
-  #           content: |
-  #             # 构建状态<font color="info">成功</font>，请相关同事注意
-  #             > 项目构建地址: [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL})
-  #             > 镜像地址: ${CUSTOM_ENV_RESULT_INFO_ALL}
-  #             > 构建者: ${CNB_BUILD_USER}
-
-  #     failStages:
-  #       - name: 企微通知
-  #         image: tencentcom/wecom-message
-  #         settings:
-  #           robot: ${qw_webhook_token}
-  #           msgType: markdown
-  #           content: |
-  #             # 构建状态<font color="warning">失败</font>，请相关同事注意
-  #             > 项目构建地址: [${CNB_BUILD_WEB_URL}](${CNB_BUILD_WEB_URL})
-  #             > 构建者: ${CNB_BUILD_USER}
 

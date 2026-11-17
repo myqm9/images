@@ -22,7 +22,7 @@ done
 for i in ${IMAGE_NAME_1} ${IMAGE_NAME_2} ${IMAGE_NAME_3}; do
     cd /workspace/Middleware/apollo/$i && docker build --pull --no-cache \
     -f Dockerfile-arm64 \
-    -t "dockerhub.qingcloud.com/tsingyun_middleware/$i:${IMAGE_VERSION}" \
+    -t "$i:${IMAGE_VERSION}" \
     --build-arg "$i=${i}" \
     --build-arg "IMAGE_VERSION=${IMAGE_VERSION}" . \
     || { 
@@ -36,35 +36,24 @@ echo "✅ 镜像构建成功"
 # 标记为 CNB 镜像
 for i in ${IMAGE_NAME_1} ${IMAGE_NAME_2} ${IMAGE_NAME_3}; do
 docker tag \
-    "dockerhub.qingcloud.com/tsingyun_middleware/$i:${IMAGE_VERSION}" \
+    "$i:${IMAGE_VERSION}" \
     "${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/$i:${IMAGE_VERSION}" \
     || { echo "❌ 错误：镜像标记失败（CNB）" >&2; exit 1; } \
 done
 
 echo "✅ 镜像标记至 CNB 仓库成功"
 
-# 标记为 tsingyun-harbor 镜像
+# 标记为腾讯云 TCR 镜像
 for i in ${IMAGE_NAME_1} ${IMAGE_NAME_2} ${IMAGE_NAME_3}; do
 docker tag \
-    "dockerhub.qingcloud.com/tsingyun_middleware/$i:${IMAGE_VERSION}" \
-    "harbor.tsingyun.net/tsingyun-middleware/$i:${IMAGE_VERSION}" \
-    || { echo "❌ 错误：镜像标记失败（tsingyun-harbor）" >&2; exit 1; } \
+    "$i:${IMAGE_VERSION}" \
+    "${TencentCloud_REGISTRY}/${REGISTRY_ORG}/$i:${IMAGE_VERSION}" \
+    || { echo "❌ 错误：镜像标记失败（腾讯云 TCR）" >&2; exit 1; } \
 done
 
-echo "✅ 镜像标记至 tsingyun-harbor 仓库成功"
+echo "✅ 镜像标记至腾讯云 TCR 仓库成功"
 
 
-
-
-
-# # 推送至qingcloud仓库
-# echo "🔨 正在推送镜像到qingcloud仓库..."
-# for i in ${IMAGE_NAME_1} ${IMAGE_NAME_2} ${IMAGE_NAME_3}; do
-# skopeo copy  --insecure-policy docker-daemon:dockerhub.qingcloud.com/tsingyun_middleware/$i:${IMAGE_VERSION} docker://dockerhub.qingcloud.com/tsingyun_middleware/$i:${IMAGE_VERSION} \
-#     || { echo "❌ 错误：qingcloud镜像推送失败" >&2; exit 1; } \
-# done
-
-# echo "✅ qingcloud镜像推送成功"
 
 
 
@@ -80,15 +69,15 @@ echo "✅ CNB 镜像推送成功"
 
 
 
-# 推送至 tsingyun-harbor 仓库
-echo "🔨 正在推送镜像到 tsingyun-harbor  仓库..."
+# 推送至腾讯云 TCR 仓库
+echo "🔨 正在推送镜像到腾讯云 TCR 仓库..."
 
 for i in ${IMAGE_NAME_1} ${IMAGE_NAME_2} ${IMAGE_NAME_3}; do
-skopeo copy --insecure-policy docker-daemon:harbor.tsingyun.net/tsingyun-middleware/$i:${IMAGE_VERSION} docker://harbor.tsingyun.net/tsingyun-middleware/$i:${IMAGE_VERSION} \
-    || { echo "❌ 错误：tsingyun-harbor  镜像推送失败" >&2; exit 1; } \
+skopeo copy --insecure-policy docker-daemon:${TencentCloud_REGISTRY}/${REGISTRY_ORG}/$i:${IMAGE_VERSION} docker://${TencentCloud_REGISTRY}/${REGISTRY_ORG}/$i:${IMAGE_VERSION} \
+    || { echo "❌ 错误：腾讯云 TCR 镜像推送失败" >&2; exit 1; } \
 done
 
-echo "✅ tsingyun-harbor  镜像推送成功"
+echo "✅ 腾讯云 TCR 镜像推送成功"
 
 
 
@@ -100,8 +89,7 @@ if [ ! -d "$output_dir" ]; then
 fi
 
 for i in ${IMAGE_NAME_1} ${IMAGE_NAME_2} ${IMAGE_NAME_3}; do
-# echo "dockerhub.qingcloud.com/tsingyun_middleware/$i:${IMAGE_VERSION}" >> "${output_dir}/CUSTOM_ENV_RESULT_INFO"
-echo "harbor.tsingyun.net/tsingyun-middleware/$i:${IMAGE_VERSION}" >> "${output_dir}/CUSTOM_ENV_RESULT_INFO"
+echo "${TencentCloud_REGISTRY}/${REGISTRY_ORG}/$i:${IMAGE_VERSION}" >> "${output_dir}/CUSTOM_ENV_RESULT_INFO"
 done
 
 echo "✅ 镜像地址已写入 ${output_dir}/CUSTOM_ENV_RESULT_INFO"
