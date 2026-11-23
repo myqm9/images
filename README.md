@@ -46,25 +46,3 @@
 # deploy 说明
 
 ## docker-compose 说明
-
-## k8s 说明
-- harbor 凭证需要在 k8s 中创建 secret
-``` bash
-kubectl create secret docker-registry tsingyun-harbor-secret \
-  --docker-server=harbor.tsingyun.net \
-  --docker-username=tsingyun-devops \
-  --docker-password=xxx \
-  -n default
-```
-- storageclass 需要在 k8s 中创建，否则会报错
-
-- tls 证书需要在 k8s 中创建 secret
-
-配置一个 TLS Secret 证书，将提前准备好的域名证书导入到 k8s 的 xxx 命名空间下的 secret 中
-
-``` yaml
-$ kubectl create secret tls tsingyun.net-tls \
-  --cert=tsingyun.net.pem \
-  --key=tsingyun.net.key \
-  --namespace=xxx
-```
