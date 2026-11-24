@@ -176,18 +176,26 @@ main:
             continueOnBuildError: false
             title: "多架构构建 AMD64 - $build_application_name"
           exports:
-            result.buildSuccess: AMD64_SUCCESS
-            result.sn: AMD64_SN
-            result.lastJobExports.ARCH_IMAGES: AMD64_IMAGES
+            buildSuccess: AMD64_SUCCESS
+            sn: AMD64_SN
+            lastJobExports.ARCH_IMAGES: AMD64_IMAGES
         - name: 校验 AMD64 构建结果
           script: |
-            case "$AMD64_SUCCESS" in
+            case "${AMD64_SUCCESS:-}" in
               true|True) ;;
+              "")
+                echo "❌ 未收到 AMD64 子流水线的 buildSuccess，构建号：${AMD64_SN:-未知}" >&2
+                exit 1
+                ;;
               *)
                 echo "❌ AMD64 构建失败，构建号：${AMD64_SN:-未知}" >&2
                 exit 1
                 ;;
             esac
+            if [ -z "${AMD64_IMAGES:-}" ]; then
+              echo "❌ AMD64 子流水线未导出 ARCH_IMAGES，构建号：${AMD64_SN:-未知}" >&2
+              exit 1
+            fi
             echo "✅ AMD64 构建成功，构建号：${AMD64_SN:-未知}"
         - name: 触发 ARM64 构建
           type: cnb:trigger
@@ -202,18 +210,26 @@ main:
             continueOnBuildError: false
             title: "多架构构建 ARM64 - $build_application_name"
           exports:
-            result.buildSuccess: ARM64_SUCCESS
-            result.sn: ARM64_SN
-            result.lastJobExports.ARCH_IMAGES: ARM64_IMAGES
+            buildSuccess: ARM64_SUCCESS
+            sn: ARM64_SN
+            lastJobExports.ARCH_IMAGES: ARM64_IMAGES
         - name: 校验 ARM64 构建结果
           script: |
-            case "$ARM64_SUCCESS" in
+            case "${ARM64_SUCCESS:-}" in
               true|True) ;;
+              "")
+                echo "❌ 未收到 ARM64 子流水线的 buildSuccess，构建号：${ARM64_SN:-未知}" >&2
+                exit 1
+                ;;
               *)
                 echo "❌ ARM64 构建失败，构建号：${ARM64_SN:-未知}" >&2
                 exit 1
                 ;;
             esac
+            if [ -z "${ARM64_IMAGES:-}" ]; then
+              echo "❌ ARM64 子流水线未导出 ARCH_IMAGES，构建号：${ARM64_SN:-未知}" >&2
+              exit 1
+            fi
             echo "✅ ARM64 构建成功，构建号：${ARM64_SN:-未知}"
         - name: 登录CNB镜像仓库
           script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
