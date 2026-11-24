@@ -1,5 +1,5 @@
 # versions.env: OPENJDK_IMAGE_AMD64
-ARG OPENJDK_IMAGE_AMD64=dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+ARG OPENJDK_IMAGE_AMD64
 FROM ${OPENJDK_IMAGE_AMD64}
 
 # 定义apollo-configservice-VERSION版本

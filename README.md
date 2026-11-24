@@ -32,8 +32,9 @@
 |              |                                 | ARM64        | harbor.tsingyun.net/tsingyun-middleware/geoserver:2.27.1-arm64 |                   |                                                  |
 | nacos        | 2.5.3                          | AMD64        | harbor.tsingyun.net/tsingyun-middleware/tsingyun-nacos:2.5.3 | 8848 9848         |                                        |
 |              |                                 | ARM64        | harbor.tsingyun.net/tsingyun-middleware/tsingyun-nacos:2.5.3-arm64 |                   |                                                  |
-| openjdk      | v11_0_23-jdk-ubi9-x86           | AMD64        | harbor.tsingyun.net/tsingyun-middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86 |                   |                                                  |
-|              |                                 | ARM64        | harbor.tsingyun.net/tsingyun-middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-arm64 |                   |                                                  |
+| openjdk | v11_0_23-jdk-ubi9 | AMD64 / ARM64 | docker.cnb.cool/myqm/image-github/openjdk:v11_0_23-jdk-ubi9 | | 多架构标签 |
+| | v11_0_23-jdk-ubi9-amd64 | AMD64 | docker.cnb.cool/myqm/image-github/openjdk:v11_0_23-jdk-ubi9-amd64 | | |
+| | v11_0_23-jdk-ubi9-arm64 | ARM64 | docker.cnb.cool/myqm/image-github/openjdk:v11_0_23-jdk-ubi9-arm64 | | |
 | libreoffice | openjdk11-7.5       | AMD64        | harbor.tsingyun.net/tsingyun-middleware/libreoffice:openjdk11-7.5 |                   |                                       |
 |              |                                 | ARM64        | harbor.tsingyun.net/tsingyun-middleware/libreoffice:openjdk11-7.5-arm64 |                   |                                                  |
 | nginx        | 1.28.3                          | AMD64        | harbor.tsingyun.net/tsingyun-middleware/nginx:1.28.3         |                   |                                                  |
@@ -45,7 +46,9 @@
 
 ## 镜像版本管理
 
-自建中间件的版本、基础镜像、源码校验和以及架构标签在 [versions.env](versions.env) 中维护。构建脚本使用 Bash 读取清单，Dockerfile 中带 `# versions.env:` 注释的 `ARG` 默认值由清单同步，支持原来的 `docker build` 用法。
+自建中间件的版本、基础镜像、源码校验和以及架构标签在 [versions.env](versions.env) 中维护。构建脚本读取清单，并给带 `# versions.env:` 注释的 `ARG` 传值。同步脚本只更新已有的默认值。
+
+Kafka 和 Apollo 的 OpenJDK 基础镜像按架构从清单传入。直接运行 `docker build` 时，先在仓库根目录执行 `source versions.env`，再为对应 Dockerfile 传入 `--build-arg OPENJDK_IMAGE_AMD64` 或 `--build-arg OPENJDK_IMAGE_ARM64`。
 
 升级时，修改组件所在段的版本，并更新与发行包配套的校验和。然后在仓库根目录执行：
 

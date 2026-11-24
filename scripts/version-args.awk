@@ -4,23 +4,27 @@
     key = $3
     sub(/\r$/, "", key)
     if (mode == "defaults") print
-    if ((getline) <= 0 || $0 !~ /^ARG [A-Z0-9_]+=/ || ENVIRON[key] == "") {
+    if ((getline) <= 0 || $0 !~ /^ARG [A-Z0-9_]+(=|\r?$)/ || ENVIRON[key] == "") {
         print FILENAME ":" FNR ": invalid version binding for " key > "/dev/stderr"
         exit 1
     }
-    name = $2
+    current = $0
+    sub(/\r$/, "", current)
+    declaration = substr(current, 5)
+    name = declaration
     sub(/=.*/, "", name)
     value = name "=" ENVIRON[key]
-    if (check_defaults) {
-        current = $0
-        sub(/\r$/, "", current)
-        if (current != "ARG " value) {
-            printf "%s:%d: needs sync for %s in versions.env\n  found:    %s\n  expected: ARG %s\n", FILENAME, FNR, key, current, value > "/dev/stderr"
-            drift = 1
-        }
+    has_default = declaration != name
+    if (check_defaults && has_default && declaration != value) {
+        printf "%s:%d: needs sync for %s in versions.env\n  found:    %s\n  expected: ARG %s\n", FILENAME, FNR, key, current, value > "/dev/stderr"
+        drift = 1
     }
-    if (mode == "defaults") print "ARG " value ($0 ~ /\r$/ ? "\r" : "")
-    else if (!seen[name]++) print value
+    if (mode == "defaults") {
+        if (has_default) print "ARG " value ($0 ~ /\r$/ ? "\r" : "")
+        else print
+    } else if (!seen[name]++) {
+        print value
+    }
     bindings++
     next
 }

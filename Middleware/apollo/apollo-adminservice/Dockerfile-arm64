@@ -1,5 +1,5 @@
 # versions.env: OPENJDK_IMAGE_ARM64
-ARG OPENJDK_IMAGE_ARM64=dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-arm64
+ARG OPENJDK_IMAGE_ARM64
 FROM ${OPENJDK_IMAGE_ARM64}
 
 # 定义apollo-adminservice-VERSION版本

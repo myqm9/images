@@ -59,12 +59,14 @@
         while IFS= read -r tcr_ref; do
           [ -z "$tcr_ref" ] && continue
           key="${tcr_ref##*/}"
-          amd64_tcr_ref="${TencentCloud_REGISTRY}/${REGISTRY_ORG}/${key}-amd64"
-          cnb_final_ref="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/${key}"
-          amd64_cnb_ref="${cnb_final_ref}-amd64"
-          skopeo copy --insecure-policy "docker://${tcr_ref}" "docker://${amd64_tcr_ref}" >/dev/null
-          skopeo copy --insecure-policy "docker://${cnb_final_ref}" "docker://${amd64_cnb_ref}" >/dev/null
-          echo "tcr|${amd64_tcr_ref},cnb|${amd64_cnb_ref}"
+          cnb_ref="${CNB_DOCKER_REGISTRY}/${CNB_REPO_SLUG_LOWERCASE}/${key}"
+          if [[ "$key" != *-amd64 ]]; then
+            skopeo copy --insecure-policy "docker://${tcr_ref}" "docker://${tcr_ref}-amd64" >/dev/null
+            skopeo copy --insecure-policy "docker://${cnb_ref}" "docker://${cnb_ref}-amd64" >/dev/null
+            tcr_ref="${tcr_ref}-amd64"
+            cnb_ref="${cnb_ref}-amd64"
+          fi
+          echo "tcr|${tcr_ref},cnb|${cnb_ref}"
         done < /tmp/CUSTOM_ENV_RESULT_INFO
       exports:
         info: ARCH_IMAGES
@@ -246,8 +248,8 @@ main:
               cnb_ref="${cnb_pair#cnb|}"
               key="${tcr_ref##*/}"
               key="${key%-amd64}"
-              amd_tcr["$key"]="$tcr_ref"
               amd_cnb["$key"]="$cnb_ref"
+              amd_tcr["$key"]="$tcr_ref"
             done <<< "$AMD64_IMAGES"
             while IFS= read -r line; do
               [ -z "$line" ] && continue
