@@ -5,9 +5,13 @@ source "$scripts_dir/../versions.env"
 
 build_images() {
     local mode=$1 arch=$2 version=$3 dockerfile=$4
+    local check_defaults=0
     shift 4
     case "$mode" in
-        --publish) : "${CNB_DOCKER_REGISTRY:?}" "${CNB_REPO_SLUG_LOWERCASE:?}" "${TencentCloud_REGISTRY:?}" "${REGISTRY_ORG:?}" ;;
+        --publish)
+            : "${CNB_DOCKER_REGISTRY:?}" "${CNB_REPO_SLUG_LOWERCASE:?}" "${TencentCloud_REGISTRY:?}" "${REGISTRY_ORG:?}"
+            check_defaults=1
+            ;;
         --local) ;;
         *) echo "Usage: bash build.sh [--local|--publish]" >&2; return 2 ;;
     esac
@@ -20,7 +24,8 @@ build_images() {
         shift 2
         ref="$name:$version"
         images+=("$ref")
-        bindings=$(awk -v mode=args -f "$scripts_dir/version-args.awk" "$context/$dockerfile")
+        bindings=$(awk -v mode=args -v check_defaults="$check_defaults" \
+            -f "$scripts_dir/version-args.awk" "$context/$dockerfile") || return 1
         options=()
         while IFS= read -r binding; do
             options+=(--build-arg "$binding")

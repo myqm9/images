@@ -13,19 +13,31 @@
       script: date +%s
       exports:
         info: BUILD_START_TIMESTAMP
-    - name: 打印环境变量
-      script: env
-    - name: 登录CNB镜像仓库
-      script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
-    - name: 登录腾讯云TCR镜像仓库
-      script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
+    - &login_cnb
+      name: 登录CNB镜像仓库
+      script: |
+        set +x
+        printf '%s\n' "${CNB_TOKEN:?缺少 CNB 登录令牌}" | docker login \
+          --username "${CNB_TOKEN_USER_NAME:?缺少 CNB 登录用户名}" --password-stdin \
+          "${CNB_DOCKER_REGISTRY:?缺少 CNB 镜像仓库域名}"
+    - &login_tcr
+      name: 登录腾讯云TCR镜像仓库
+      script: |
+        set +x
+        : "${TencentCloud_REGISTRY:?缺少 TCR 镜像仓库域名}"
+        : "${TencentCloud_TCR_AK:?缺少 TCR Docker 登录用户名}"
+        : "${TencentCloud_TCR_SK:?缺少 TCR Docker 登录密码}"
+        if ! printf '%s\n' "$TencentCloud_TCR_SK" | docker login \
+            --username "$TencentCloud_TCR_AK" --password-stdin "$TencentCloud_REGISTRY"; then
+          printf 'TCR 登录失败（%s），请核对控制台显示的 Docker 登录用户名和密码。\n' "$TencentCloud_REGISTRY" >&2
+          exit 1
+        fi
     - name: 打印即将要构建的应用
       script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
     - name: 构建指定镜像
       timeout: 30m
       script: |
         unset REGISTRY_AUTH_FILE
-        bash scripts/sync-versions.sh --check || exit 1
         if [ -z "$build_version" ]; then
           cd Middleware/$build_application_name && bash build.sh
         else
@@ -85,19 +97,14 @@
       script: date +%s
       exports:
         info: BUILD_START_TIMESTAMP
-    - name: 打印环境变量
-      script: env
-    - name: 登录CNB镜像仓库
-      script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
-    - name: 登录腾讯云TCR镜像仓库
-      script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
+    - *login_cnb
+    - *login_tcr
     - name: 打印即将要构建的应用
       script: echo "即将要构建的应用:$build_application_name 版本:$build_version"
     - name: 构建指定镜像
       timeout: 30m
       script: |
         unset REGISTRY_AUTH_FILE
-        bash scripts/sync-versions.sh --check || exit 1
         if [ -z "$build_version" ]; then
           cd Middleware/$build_application_name && bash build-arm64.sh
         else
@@ -138,9 +145,7 @@
       exports:
         info: ARCH_IMAGES
 
-main:
-# 匹配所有分支名
-"**":
+main: &middleware_events
   web_trigger_amd_three:
     - <<: *build_amd64
   web_trigger_arm_three:
@@ -161,6 +166,11 @@ main:
       imports:
         - https://cnb.cool/myqm/key/-/blob/main/docker_images_key.yaml
       stages:
+        - name: 确定构建版本目录
+          # 留空时使用当前组件目录，给 cnb:trigger 传递非空字符串。
+          script: printf '%s\n' "${build_version:-.}"
+          exports:
+            info: BUILD_VERSION_DIR
         - name: 触发 AMD64 构建
           type: cnb:trigger
           options:
@@ -169,23 +179,31 @@ main:
             event: api_trigger_build_amd64
             env:
               build_application_name: $build_application_name
-              build_version: $build_version
+              build_version: $BUILD_VERSION_DIR
             sync: true
             continueOnBuildError: false
             title: "多架构构建 AMD64 - $build_application_name"
           exports:
-            result.buildSuccess: AMD64_SUCCESS
-            result.sn: AMD64_SN
-            result.lastJobExports.ARCH_IMAGES: AMD64_IMAGES
+            buildSuccess: AMD64_SUCCESS
+            sn: AMD64_SN
+            lastJobExports.ARCH_IMAGES: AMD64_IMAGES
         - name: 校验 AMD64 构建结果
           script: |
-            case "$AMD64_SUCCESS" in
+            case "${AMD64_SUCCESS:-}" in
               true|True) ;;
+              "")
+                echo "❌ 未收到 AMD64 子流水线的 buildSuccess，构建号：${AMD64_SN:-未知}" >&2
+                exit 1
+                ;;
               *)
                 echo "❌ AMD64 构建失败，构建号：${AMD64_SN:-未知}" >&2
                 exit 1
                 ;;
             esac
+            if [ -z "${AMD64_IMAGES:-}" ]; then
+              echo "❌ AMD64 子流水线未导出 ARCH_IMAGES，构建号：${AMD64_SN:-未知}" >&2
+              exit 1
+            fi
             echo "✅ AMD64 构建成功，构建号：${AMD64_SN:-未知}"
         - name: 触发 ARM64 构建
           type: cnb:trigger
@@ -195,28 +213,34 @@ main:
             event: api_trigger_build_arm64
             env:
               build_application_name: $build_application_name
-              build_version: $build_version
+              build_version: $BUILD_VERSION_DIR
             sync: true
             continueOnBuildError: false
             title: "多架构构建 ARM64 - $build_application_name"
           exports:
-            result.buildSuccess: ARM64_SUCCESS
-            result.sn: ARM64_SN
-            result.lastJobExports.ARCH_IMAGES: ARM64_IMAGES
+            buildSuccess: ARM64_SUCCESS
+            sn: ARM64_SN
+            lastJobExports.ARCH_IMAGES: ARM64_IMAGES
         - name: 校验 ARM64 构建结果
           script: |
-            case "$ARM64_SUCCESS" in
+            case "${ARM64_SUCCESS:-}" in
               true|True) ;;
+              "")
+                echo "❌ 未收到 ARM64 子流水线的 buildSuccess，构建号：${ARM64_SN:-未知}" >&2
+                exit 1
+                ;;
               *)
                 echo "❌ ARM64 构建失败，构建号：${ARM64_SN:-未知}" >&2
                 exit 1
                 ;;
             esac
+            if [ -z "${ARM64_IMAGES:-}" ]; then
+              echo "❌ ARM64 子流水线未导出 ARCH_IMAGES，构建号：${ARM64_SN:-未知}" >&2
+              exit 1
+            fi
             echo "✅ ARM64 构建成功，构建号：${ARM64_SN:-未知}"
-        - name: 登录CNB镜像仓库
-          script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
-        - name: 登录腾讯云TCR镜像仓库
-          script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
+        - *login_cnb
+        - *login_tcr
         - name: 创建并推送多架构镜像清单
           script: |
             set -euo pipefail
@@ -271,12 +295,8 @@ main:
   #     runner:
   #       cpus: 64
   #     stages:
-  #       - name: 打印环境变量
-  #         script: env
-  #       - name: 登录CNB镜像仓库
-  #         script: docker login -u ${CNB_TOKEN_USER_NAME} -p "${CNB_TOKEN}" ${CNB_DOCKER_REGISTRY}
-  #       - name: 登录腾讯云TCR镜像仓库
-  #         script: docker login -u ${TencentCloud_TCR_AK} -p "${TencentCloud_TCR_SK}" ${TencentCloud_REGISTRY}
+  #       - *login_cnb
+  #       - *login_tcr
   #       - name: 打印即将要构建的应用
   #         script: echo "即将要构建的应用:$build_application_name"
   #         # 构建所有镜像
@@ -348,3 +368,6 @@ main:
   #         script:
   #           - echo $CUSTOM_ENV_RESULT_CODE_ALL
   #           - echo -e "镜像地址版本:\n$CUSTOM_ENV_RESULT_INFO_ALL"
+
+# 其他分支沿用同一组构建事件。
+"$": *middleware_events

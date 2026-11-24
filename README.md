@@ -55,7 +55,7 @@ bash scripts/sync-versions.sh --check
 bash Middleware/redis/build.sh --local
 ```
 
-`--write` 更新 Dockerfile 默认值，提交时请一起提交清单和生成的差异。CNB 在每次构建前运行 `--check`，发现差异会终止构建。
+`--write` 更新 Dockerfile 默认值，提交时请一起提交清单和生成的差异。`--check` 检查全仓库。CNB 构建时检查所选组件和架构的 Dockerfile，发现差异会显示参数名、当前值和清单值。
 
 | 构建场景 | 示例 |
 | --- | --- |

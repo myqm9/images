@@ -5,7 +5,7 @@
 # ARG BASE_IMAGE
 #ARG BASE_IMAGE=postgres:15-alpine3.24
 # versions.env: POSTGIS_BASE_IMAGE
-ARG BASE_IMAGE=harbor.tsingyun.net/tsingyun-middleware/postgres:15.18-alpine3.24
+ARG BASE_IMAGE=docker.cnb.cool/myqm/image-github/postgres:15.18-alpine3.24
 
 
 FROM ${BASE_IMAGE}
