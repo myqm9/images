@@ -1,6 +1,9 @@
-FROM dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+# versions.env: OPENJDK_IMAGE_AMD64
+ARG OPENJDK_IMAGE_AMD64=dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+FROM ${OPENJDK_IMAGE_AMD64}
 
 # 定义apollo-portal-VERSION版本
+# versions.env: APOLLO_VERSION
 ARG VERSION=2.3.0
 
 ENV APOLLO_RUN_MODE "Docker"
@@ -25,10 +28,10 @@ RUN dnf update -y && \
 
 # 下载并安装 apollo-portal
 RUN set -x \
-    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/apollo-portal-2.3.0-github.zip" \
-    && unzip apollo-portal-2.3.0-github.zip -d apollo-portal \
-    && mv apollo-portal/apollo-portal-2.3.0.jar /apollo-portal \
-    && rm -rf apollo-portal-2.3.0-github.zip apollo-portal
+    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/apollo-portal-${VERSION}-github.zip" \
+    && unzip apollo-portal-${VERSION}-github.zip -d apollo-portal \
+    && mv apollo-portal/apollo-portal-${VERSION}.jar /apollo-portal \
+    && rm -rf apollo-portal-${VERSION}-github.zip apollo-portal
 
     
 #复制启动脚本到容器

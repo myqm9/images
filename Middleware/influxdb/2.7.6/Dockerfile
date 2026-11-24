@@ -1,4 +1,6 @@
-FROM alpine
+# versions.env: INFLUXDB_276_BASE_IMAGE
+ARG INFLUXDB_276_BASE_IMAGE=alpine
+FROM ${INFLUXDB_276_BASE_IMAGE}
 
 #RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.nju.edu.cn/g' /etc/apk/repositories
 RUN sed -i 's@dl-cdn.alpinelinux.org@mirrors.cloud.tencent.com@g' /etc/apk/repositories
@@ -20,15 +22,21 @@ RUN   apk add --no-cache \
 RUN rm -rf /var/cache/apk/*
 
 # Install dasel for configuration parsing
+# versions.env: INFLUXDB_276_DASEL_VERSION
+ARG DASEL_VERSION=v2.4.1
+# versions.env: INFLUXDB_276_DASEL_SHA_AMD64
+ARG DASEL_SHA_AMD64=8e9fb0aa24e35774fab792005f05f9df141c22ec0a7436c7329a932582a10200
+# versions.env: INFLUXDB_276_DASEL_SHA_ARM64
+ARG DASEL_SHA_ARM64=535f0f4c6362aa4b773664f7cfdb52d86f2723eac52a1aca6dfc6a69e2341c17
 RUN case "$(apk --print-arch)" in \
       x86_64)  arch=amd64 ;; \
       aarch64) arch=arm64 ;; \
       *) echo 'Unsupported architecture' && exit 1 ;; \
     esac && \
-    curl -fL "https://github.com/TomWright/dasel/releases/download/v2.4.1/dasel_linux_${arch}.gz" | gzip -d > /usr/local/bin/dasel && \
+    curl -fL "https://github.com/TomWright/dasel/releases/download/${DASEL_VERSION}/dasel_linux_${arch}.gz" | gzip -d > /usr/local/bin/dasel && \
     case ${arch} in \
-      amd64) echo '8e9fb0aa24e35774fab792005f05f9df141c22ec0a7436c7329a932582a10200  /usr/local/bin/dasel' ;; \
-      arm64) echo '535f0f4c6362aa4b773664f7cfdb52d86f2723eac52a1aca6dfc6a69e2341c17  /usr/local/bin/dasel' ;; \
+      amd64) echo "${DASEL_SHA_AMD64}  /usr/local/bin/dasel" ;; \
+      arm64) echo "${DASEL_SHA_ARM64}  /usr/local/bin/dasel" ;; \
     esac | sha256sum -c - && \
     chmod +x /usr/local/bin/dasel && \
     dasel --version
@@ -39,7 +47,9 @@ RUN addgroup -S -g 1000 influxdb && \
     chown -R influxdb:influxdb /home/influxdb
 
 # Install the infuxd server
-ENV INFLUXDB_VERSION 2.7.6
+# versions.env: INFLUXDB_276_VERSION
+ARG INFLUXDB_VERSION=2.7.6
+ENV INFLUXDB_VERSION=${INFLUXDB_VERSION}
 RUN case "$(apk --print-arch)" in \
       x86_64)  arch=amd64 ;; \
       aarch64) arch=arm64 ;; \
@@ -61,7 +71,9 @@ RUN case "$(apk --print-arch)" in \
     influxd version
 
 # Install the influx CLI
-ENV INFLUX_CLI_VERSION 2.7.3
+# versions.env: INFLUXDB_276_CLI_VERSION
+ARG INFLUX_CLI_VERSION=2.7.3
+ENV INFLUX_CLI_VERSION=${INFLUX_CLI_VERSION}
 RUN case "$(apk --print-arch)" in \
       x86_64)  arch=amd64 ;; \
       aarch64) arch=arm64 ;; \

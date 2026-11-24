@@ -43,6 +43,28 @@
 |  | 8.0.38 | 官方镜像 | mysql:8.0.38 | 3306 | |
 
 
+## 镜像版本管理
+
+自建中间件的版本、基础镜像、源码校验和以及架构标签在 [versions.env](versions.env) 中维护。构建脚本使用 Bash 读取清单，Dockerfile 中带 `# versions.env:` 注释的 `ARG` 默认值由清单同步，支持原来的 `docker build` 用法。
+
+升级时，修改组件所在段的版本，并更新与发行包配套的校验和。然后在仓库根目录执行：
+
+```bash
+bash scripts/sync-versions.sh --write
+bash scripts/sync-versions.sh --check
+bash Middleware/redis/build.sh --local
+```
+
+`--write` 更新 Dockerfile 默认值，提交时请一起提交清单和生成的差异。CNB 在每次构建前运行 `--check`，发现差异会终止构建。
+
+| 构建场景 | 示例 |
+| --- | --- |
+| 本地构建 AMD64 镜像 | `bash Middleware/redis/build.sh --local` |
+| 在 ARM64 节点构建历史版本 | `bash Middleware/redis/8.2.2/build-arm64.sh --local` |
+| CNB 构建并推送到两个仓库 | 在已配置仓库凭据的 CI 中运行原有的 `bash build.sh` 或 `bash build-arm64.sh` |
+
+在对应架构的节点上运行构建，跨架构执行 Dockerfile 的 `RUN` 步骤需要构建器支持模拟。Apollo 入口会依次构建 configservice、adminservice、portal 三个镜像。ClickHouse 的 AMD64 软件包版本保留四段，镜像标签保留前三段，ARM64 单独选用兼容版本。LibreOffice 保留历史标签 `openjdk11-7.5` 和兼容目录，实际安装的 Alpine 软件包由 `LIBREOFFICE_APK_VERSION` 指定。MySQL 等直接引用官方镜像的部署示例继续在各自部署文件中配置。
+
 # deploy 说明
 
 ## docker-compose 说明

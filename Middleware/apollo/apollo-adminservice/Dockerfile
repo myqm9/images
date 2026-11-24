@@ -1,6 +1,9 @@
-FROM dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+# versions.env: OPENJDK_IMAGE_AMD64
+ARG OPENJDK_IMAGE_AMD64=dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+FROM ${OPENJDK_IMAGE_AMD64}
 
 # 定义apollo-adminservice-VERSION版本
+# versions.env: APOLLO_VERSION
 ARG VERSION=2.3.0
 
 ENV APOLLO_RUN_MODE "Docker"
@@ -24,10 +27,10 @@ RUN dnf update -y && \
 
 # 下载并安装 apollo-adminservice
 RUN set -x \
-    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/apollo-adminservice-2.3.0-github.zip" \
-    && unzip apollo-adminservice-2.3.0-github.zip -d apollo-adminservice \
-    && mv apollo-adminservice/apollo-adminservice-2.3.0.jar /apollo-adminservice \
-    && rm -rf apollo-adminservice-2.3.0-github.zip apollo-adminservice
+    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/apollo-adminservice-${VERSION}-github.zip" \
+    && unzip apollo-adminservice-${VERSION}-github.zip -d apollo-adminservice \
+    && mv apollo-adminservice/apollo-adminservice-${VERSION}.jar /apollo-adminservice \
+    && rm -rf apollo-adminservice-${VERSION}-github.zip apollo-adminservice
     
 #复制启动脚本到容器
 COPY ./scripts /apollo-adminservice/scripts

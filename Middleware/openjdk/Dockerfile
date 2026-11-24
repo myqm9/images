@@ -1,5 +1,7 @@
 # 使用基于 OpenJDK 11 的 JDK镜像
-FROM eclipse-temurin:11.0.23_9-jdk-ubi9-minimal
+# versions.env: TEMURIN_BASE_IMAGE
+ARG TEMURIN_BASE_IMAGE=eclipse-temurin:11.0.23_9-jdk-ubi9-minimal
+FROM ${TEMURIN_BASE_IMAGE}
 
 # 先安装基础工具
 RUN microdnf update -y && \

@@ -1,4 +1,6 @@
-FROM alpine:3.22
+# versions.env: REDIS_822_BASE_IMAGE
+ARG REDIS_822_BASE_IMAGE=alpine:3.22
+FROM ${REDIS_822_BASE_IMAGE}
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
 RUN set -eux; \
@@ -19,8 +21,12 @@ RUN set -eux; \
 # we need setpriv package as busybox provides very limited functionality
 		setpriv \
 	;
-ENV REDIS_DOWNLOAD_URL=https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/redis-8.2.2.tar.gz
-ENV REDIS_DOWNLOAD_SHA=e355378d7f97efd06321fff881efc452a9673cc27b3a6d0dfd2a45fbcc83349c
+# versions.env: REDIS_822_VERSION
+ARG REDIS_VERSION=8.2.2
+ENV REDIS_DOWNLOAD_URL=https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/redis-${REDIS_VERSION}.tar.gz
+# versions.env: REDIS_822_DOWNLOAD_SHA
+ARG REDIS_DOWNLOAD_SHA=e355378d7f97efd06321fff881efc452a9673cc27b3a6d0dfd2a45fbcc83349c
+ENV REDIS_DOWNLOAD_SHA=${REDIS_DOWNLOAD_SHA}
 RUN set -eux; \
 	\
 	apk add --no-cache --virtual .build-deps \

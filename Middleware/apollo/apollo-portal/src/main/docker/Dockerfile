@@ -18,9 +18,14 @@
 # 2. Build with: mvn docker:build -pl apollo-portal
 # 3. Run with: docker run -p 8070:8070 -e SPRING_DATASOURCE_URL="jdbc:mysql://fill-in-the-correct-server:3306/ApolloPortalDB?characterEncoding=utf8" -e SPRING_DATASOURCE_USERNAME=FillInCorrectUser -e SPRING_DATASOURCE_PASSWORD=FillInCorrectPassword -e APOLLO_PORTAL_ENVS=dev,pro -e DEV_META=http://fill-in-dev-meta-server:8080 -e PRO_META=http://fill-in-pro-meta-server:8080 -d -v /tmp/logs:/opt/logs --name apollo-portal apolloconfig/apollo-portal
 
-FROM alpine:3.15.5
+# versions.env: APOLLO_PORTAL_UNPACK_IMAGE
+ARG APOLLO_PORTAL_UNPACK_IMAGE=alpine:3.15.5
+# versions.env: APOLLO_PORTAL_JRE_IMAGE
+ARG APOLLO_PORTAL_JRE_IMAGE=openjdk:8-jre-slim
+FROM ${APOLLO_PORTAL_UNPACK_IMAGE}
 
-ARG VERSION
+# versions.env: APOLLO_VERSION
+ARG VERSION=2.3.0
 ENV VERSION $VERSION
 
 COPY apollo-portal-${VERSION}-github.zip /apollo-portal/apollo-portal-${VERSION}-github.zip
@@ -29,7 +34,7 @@ RUN unzip /apollo-portal/apollo-portal-${VERSION}-github.zip -d /apollo-portal \
     && rm -rf /apollo-portal/apollo-portal-${VERSION}-github.zip \
     && chmod +x /apollo-portal/scripts/startup.sh
 
-FROM openjdk:8-jre-slim
+FROM ${APOLLO_PORTAL_JRE_IMAGE}
 LABEL maintainer="g632104866@gmail.com;finchcn@gmail.com;ameizi<sxyx2008@163.com>"
 
 ENV APOLLO_RUN_MODE "Docker"

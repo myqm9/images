@@ -3,16 +3,26 @@
 #
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
-FROM alpine:3.21
+# versions.env: NGINX_BASE_IMAGE
+ARG NGINX_BASE_IMAGE=alpine:3.21
+FROM ${NGINX_BASE_IMAGE}
 
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"
 
-ENV NGINX_VERSION  1.28.3
-ENV PKG_RELEASE    1
-ENV DYNPKG_RELEASE 1
+# versions.env: NGINX_VERSION
+ARG NGINX_VERSION=1.28.3
+ENV NGINX_VERSION=${NGINX_VERSION}
+# versions.env: NGINX_PKG_RELEASE
+ARG PKG_RELEASE=1
+ENV PKG_RELEASE=${PKG_RELEASE}
+# versions.env: NGINX_DYNPKG_RELEASE
+ARG DYNPKG_RELEASE=1
+ENV DYNPKG_RELEASE=${DYNPKG_RELEASE}
 
 RUN sed -i 's@dl-cdn.alpinelinux.org@mirrors.cloud.tencent.com@g' /etc/apk/repositories
 
+# versions.env: NGINX_PKG_OSS_SHA512
+ARG NGINX_PKG_OSS_SHA512=517bc18954ccf4efddd51986584ca1f37966833ad342a297e1fe58fd0faf14c5a4dabcb23519dca433878a2927a95d6bea05a6749ee2fa67a33bf24cdc41b1e4
 RUN set -x \
 # create nginx user/group first, to be consistent throughout docker variants
     && addgroup -g 101 -S nginx \
@@ -61,7 +71,7 @@ RUN set -x \
                 export HOME=${tempDir} \
                 && cd ${tempDir} \
                 && curl -f -L -O https://github.com/nginx/pkg-oss/archive/${NGINX_VERSION}-${PKG_RELEASE}.tar.gz \
-                && PKGOSSCHECKSUM=\"517bc18954ccf4efddd51986584ca1f37966833ad342a297e1fe58fd0faf14c5a4dabcb23519dca433878a2927a95d6bea05a6749ee2fa67a33bf24cdc41b1e4 *${NGINX_VERSION}-${PKG_RELEASE}.tar.gz\" \
+                && PKGOSSCHECKSUM=\"${NGINX_PKG_OSS_SHA512} *${NGINX_VERSION}-${PKG_RELEASE}.tar.gz\" \
                 && if [ \"\$(openssl sha512 -r ${NGINX_VERSION}-${PKG_RELEASE}.tar.gz)\" = \"\$PKGOSSCHECKSUM\" ]; then \
                     echo \"pkg-oss tarball checksum verification succeeded!\"; \
                 else \

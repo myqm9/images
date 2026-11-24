@@ -4,15 +4,21 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
-FROM golang:1.26.5 AS gosubuilder
-ENV GOSU_VERSION=1.19
+# versions.env: PG_BASE_IMAGE
+ARG PG_BASE_IMAGE=alpine:3.24
+# versions.env: PG_GOSU_BUILDER_IMAGE
+ARG PG_GOSU_BUILDER_IMAGE=golang:1.26.5
+FROM ${PG_GOSU_BUILDER_IMAGE} AS gosubuilder
+# versions.env: GOSU_VERSION
+ARG GOSU_VERSION=1.19
+ENV GOSU_VERSION=${GOSU_VERSION}
 WORKDIR /go/src/github.com/tianon
 RUN git clone https://github.com/tianon/gosu.git --branch "$GOSU_VERSION" --depth 1 && \
 	cd gosu && \
 	go mod download && \
 	CGO_ENABLED=0 go build -trimpath -o /tmp/gosu .
 
-FROM alpine:3.24
+FROM ${PG_BASE_IMAGE}
 
 # 70 is the standard uid/gid for "postgres" in Alpine
 # https://git.alpinelinux.org/aports/tree/main/postgresql-common/postgresql-common.pre-install?h=3.22-stable
@@ -40,9 +46,15 @@ ENV LANG en_US.utf8
 
 RUN mkdir /docker-entrypoint-initdb.d
 
-ENV PG_MAJOR 15
-ENV PG_VERSION 15.18
-ENV PG_SHA256 11df0df97fe3ea4ba9a791faaf39cee1d2fe571e78885b5b55d8517d27c323b4
+# versions.env: PG_MAJOR
+ARG PG_MAJOR=15
+ENV PG_MAJOR=${PG_MAJOR}
+# versions.env: PG_VERSION
+ARG PG_VERSION=15.18
+ENV PG_VERSION=${PG_VERSION}
+# versions.env: PG_SHA256
+ARG PG_SHA256=11df0df97fe3ea4ba9a791faaf39cee1d2fe571e78885b5b55d8517d27c323b4
+ENV PG_SHA256=${PG_SHA256}
 
 ENV DOCKER_PG_LLVM_DEPS \
 		llvm21-dev \

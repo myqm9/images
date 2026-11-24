@@ -1,4 +1,8 @@
-FROM ubuntu:20.04 AS glibc-donor
+# versions.env: CLICKHOUSE_GLIBC_IMAGE
+ARG CLICKHOUSE_GLIBC_IMAGE=ubuntu:20.04
+# versions.env: CLICKHOUSE_BASE_IMAGE
+ARG CLICKHOUSE_BASE_IMAGE=alpine
+FROM ${CLICKHOUSE_GLIBC_IMAGE} AS glibc-donor
 ARG TARGETARCH
 
 RUN arch=${TARGETARCH:-amd64} \
@@ -9,7 +13,7 @@ RUN arch=${TARGETARCH:-amd64} \
     && ln -s "${rarch}-linux-gnu" /lib/linux-gnu
 
 
-FROM alpine
+FROM ${CLICKHOUSE_BASE_IMAGE}
 # 更换为腾讯云镜像源并更新系统
 RUN sed -i 's@dl-cdn.alpinelinux.org@mirrors.cloud.tencent.com@g' /etc/apk/repositories \
     && apk update \
@@ -36,7 +40,8 @@ RUN arch=${TARGETARCH:-amd64} \
 # lts / testing / prestable / etc
 # ARG REPO_CHANNEL="stable"
 ARG REPOSITORY="https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0"
-ARG VERSION="24.5.1.1763"
+# versions.env: CLICKHOUSE_VERSION
+ARG VERSION=24.5.1.1763
 ARG PACKAGES="clickhouse-client clickhouse-server clickhouse-common-static"
 ARG DIRECT_DOWNLOAD_URLS=""
 

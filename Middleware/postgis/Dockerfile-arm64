@@ -4,18 +4,26 @@
 
 # ARG BASE_IMAGE
 #ARG BASE_IMAGE=postgres:15-alpine3.24
+# versions.env: POSTGIS_BASE_IMAGE_ARM64
 ARG BASE_IMAGE=harbor.tsingyun.net/tsingyun-middleware/postgres:15.18-alpine3.24-arm64
 
 
 FROM ${BASE_IMAGE}
 
+# versions.env: POSTGIS_VERSION
+ARG POSTGIS_VERSION=3.5.7
+ENV POSTGIS_VERSION=${POSTGIS_VERSION}
+
 LABEL maintainer="PostGIS Project - https://postgis.net" \
-      org.opencontainers.image.description="PostGIS 3.5.7 spatial database extension with PostgreSQL 15 Alpine" \
+      org.opencontainers.image.description="PostGIS ${POSTGIS_VERSION} spatial database extension with PostgreSQL Alpine" \
       org.opencontainers.image.source="https://github.com/postgis/docker-postgis"
 
-ENV POSTGIS_VERSION=3.5.7
-ENV POSTGIS_SHA256=22f99b7f72a123f69cadb39c1b48bb01752a942d5d7967f939dd6e224a005121
-ENV PGROUTING_VERSION=3.7.1
+# versions.env: POSTGIS_SHA256
+ARG POSTGIS_SHA256=22f99b7f72a123f69cadb39c1b48bb01752a942d5d7967f939dd6e224a005121
+ENV POSTGIS_SHA256=${POSTGIS_SHA256}
+# versions.env: PGROUTING_VERSION
+ARG PGROUTING_VERSION=3.7.1
+ENV PGROUTING_VERSION=${PGROUTING_VERSION}
 
 
 RUN set -eux \

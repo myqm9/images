@@ -1,7 +1,11 @@
-FROM dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+# versions.env: OPENJDK_IMAGE_AMD64
+ARG OPENJDK_IMAGE_AMD64=dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+FROM ${OPENJDK_IMAGE_AMD64}
 
 # 定义SCALA,KAFKA版本
+# versions.env: KAFKA_VERSION
 ARG KAFKA_VERSION=3.9.2
+# versions.env: SCALA_VERSION
 ARG SCALA_VERSION=2.13
 
 

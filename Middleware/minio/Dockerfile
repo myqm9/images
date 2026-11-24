@@ -1,7 +1,12 @@
 # 阶段1：依赖下载层
-FROM golang:1.24.11-alpine3.23 AS builder
+# versions.env: MINIO_BUILDER_IMAGE
+ARG MINIO_BUILDER_IMAGE=golang:1.24.11-alpine3.23
+# versions.env: MINIO_BASE_IMAGE
+ARG MINIO_BASE_IMAGE=minio/minio:latest
+FROM ${MINIO_BUILDER_IMAGE} AS builder
 
 # 定义MINIO版本
+# versions.env: MINIO_VERSION
 ARG MINIO_VERSION=RELEASE.2025-10-15T17-29-55Z
 
 WORKDIR /app
@@ -18,9 +23,10 @@ RUN wget https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/downloa
 
 # 阶段3：生成最终镜像
 #官方的 minio 镜像自带了 mc 命令
-FROM minio/minio:latest
+FROM ${MINIO_BASE_IMAGE}
 
 # 定义MINIO版本
+# versions.env: MINIO_VERSION
 ARG MINIO_VERSION=RELEASE.2025-10-15T17-29-55Z
 
 COPY --from=builder /app/minio-${MINIO_VERSION}/minio /usr/bin/minio

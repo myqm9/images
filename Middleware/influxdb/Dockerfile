@@ -1,4 +1,6 @@
-FROM ubuntu:24.04
+# versions.env: INFLUXDB_BASE_IMAGE
+ARG INFLUXDB_BASE_IMAGE=ubuntu:24.04
+FROM ${INFLUXDB_BASE_IMAGE}
 
 RUN sed -Ei "s@(security|ports|archive).ubuntu.com@mirrors.cloud.tencent.com@g" /etc/apt/sources.list.d/ubuntu.sources && \
     export DEBIAN_FRONTEND=noninteractive && \
@@ -19,7 +21,9 @@ RUN groupadd --gid 1500 influxdb3 && \
              /usr/lib/influxdb3 \
              /plugins
 
-ENV INFLUXDB_VERSION=3.9.0
+# versions.env: INFLUXDB_VERSION
+ARG INFLUXDB_VERSION=3.9.0
+ENV INFLUXDB_VERSION=${INFLUXDB_VERSION}
 RUN case "$(dpkg --print-architecture)" in \
         amd64) ARCH=amd64 ;; \
         arm64) ARCH=arm64 ;; \

@@ -1,6 +1,9 @@
-FROM dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+# versions.env: OPENJDK_IMAGE_AMD64
+ARG OPENJDK_IMAGE_AMD64=dockerhub.qingcloud.com/tsingyun_middleware/tsingyun-openjdk:v11_0_23-jdk-ubi9-x86
+FROM ${OPENJDK_IMAGE_AMD64}
 
 # 定义apollo-configservice-VERSION版本
+# versions.env: APOLLO_VERSION
 ARG VERSION=2.3.0
 
 ENV APOLLO_RUN_MODE "Docker"
@@ -23,10 +26,10 @@ RUN dnf update -y && \
 
 # 下载并安装 apollo-configservice
 RUN set -x \
-    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/apollo-configservice-2.3.0-github.zip" \
-    && unzip apollo-configservice-2.3.0-github.zip -d apollo-configservice \
-    && mv apollo-configservice/apollo-configservice-2.3.0.jar /apollo-configservice \
-    && rm -rf apollo-configservice-2.3.0-github.zip apollo-configservice
+    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/apollo-configservice-${VERSION}-github.zip" \
+    && unzip apollo-configservice-${VERSION}-github.zip -d apollo-configservice \
+    && mv apollo-configservice/apollo-configservice-${VERSION}.jar /apollo-configservice \
+    && rm -rf apollo-configservice-${VERSION}-github.zip apollo-configservice
 
 #复制启动脚本到容器
 COPY ./scripts /apollo-configservice/scripts

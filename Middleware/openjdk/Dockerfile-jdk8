@@ -1,3 +1,4 @@
+# versions.env: CORRETTO_8_TAG
 ARG VERSION=8-alpine3.22-jdk
 FROM amazoncorretto:${VERSION}
 

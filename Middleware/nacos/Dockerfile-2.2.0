@@ -1,4 +1,6 @@
-FROM alpine:latest
+# versions.env: NACOS_BASE_IMAGE
+ARG NACOS_BASE_IMAGE=alpine:latest
+FROM ${NACOS_BASE_IMAGE}
 LABEL maintainer="devops@tsingyun.link"
 
 # 安装依赖
@@ -29,6 +31,7 @@ ENV MODE="cluster" \
     TOMCAT_ACCESSLOG_ENABLED="false" \
     TIME_ZONE="Asia/Shanghai"
 
+# versions.env: NACOS_220_VERSION
 ARG NACOS_VERSION=2.2.0
 ARG HOT_FIX_FLAG=""
 

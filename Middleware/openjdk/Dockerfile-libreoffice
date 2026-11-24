@@ -1,4 +1,6 @@
-FROM eclipse-temurin:11.0.23_9-jdk-ubi9-minimal
+# versions.env: TEMURIN_BASE_IMAGE
+ARG TEMURIN_BASE_IMAGE=eclipse-temurin:11.0.23_9-jdk-ubi9-minimal
+FROM ${TEMURIN_BASE_IMAGE}
 
 
 ENV TZ=Asia/Shanghai \
@@ -24,14 +26,16 @@ RUN dnf update -y && \
 
 WORKDIR /tmp
 
+# versions.env: LIBREOFFICE_RPM_VERSION
+ARG LIBREOFFICE_VERSION=7.5.9.2
 # 下载 LibreOffice
-RUN wget https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/LibreOffice_7.5.9.2_Linux_x86-64_rpm.tar.gz \
-    && tar xf LibreOffice_7.5.9.2_Linux_x86-64_rpm.tar.gz \
-    && dnf localinstall -y LibreOffice_7.5.9.2_Linux_x86-64_rpm/RPMS/*.rpm \
+RUN wget https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/LibreOffice_${LIBREOFFICE_VERSION}_Linux_x86-64_rpm.tar.gz \
+    && tar xf LibreOffice_${LIBREOFFICE_VERSION}_Linux_x86-64_rpm.tar.gz \
+    && dnf localinstall -y LibreOffice_${LIBREOFFICE_VERSION}_Linux_x86-64_rpm/RPMS/*.rpm \
     && rm -rf LibreOffice*
 
 # 创建兼容软链接
-RUN ln -sf /opt/libreoffice7.5 /opt/libreoffice
+RUN ln -sf /opt/libreoffice${LIBREOFFICE_VERSION%.*.*} /opt/libreoffice
 
 # 字体
 RUN mkdir -p /usr/share/fonts/chinese

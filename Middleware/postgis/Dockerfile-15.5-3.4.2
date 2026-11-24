@@ -2,17 +2,25 @@
 # NOTE: THIS DOCKERFILE IS GENERATED VIA "make update"! PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
+# versions.env: POSTGIS_342_BASE_IMAGE
 ARG BASE_IMAGE=postgres:15-alpine3.18
 
 FROM ${BASE_IMAGE}
 
+# versions.env: POSTGIS_342_VERSION
+ARG POSTGIS_VERSION=3.4.2
+ENV POSTGIS_VERSION=${POSTGIS_VERSION}
+
 LABEL maintainer="PostGIS Project - https://postgis.net" \
-      org.opencontainers.image.description="PostGIS 3.4.2 spatial database extension with PostgreSQL 15 Alpine" \
+      org.opencontainers.image.description="PostGIS ${POSTGIS_VERSION} spatial database extension with PostgreSQL Alpine" \
       org.opencontainers.image.source="https://github.com/postgis/docker-postgis"
 
-ENV POSTGIS_VERSION 3.4.2
-ENV POSTGIS_SHA256 17aa8760a5c4fcb9a1fdc750c1c9aca0198a35dd1e320628064c43f178eefed2
-ENV PGROUTING_VERSION 3.7.1
+# versions.env: POSTGIS_342_SHA256
+ARG POSTGIS_SHA256=17aa8760a5c4fcb9a1fdc750c1c9aca0198a35dd1e320628064c43f178eefed2
+ENV POSTGIS_SHA256=${POSTGIS_SHA256}
+# versions.env: PGROUTING_VERSION
+ARG PGROUTING_VERSION=3.7.1
+ENV PGROUTING_VERSION=${PGROUTING_VERSION}
 
 
 RUN set -eux \
