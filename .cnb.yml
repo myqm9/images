@@ -3,7 +3,7 @@
     tags: cnb:arch:amd64
     cpus: 64
   docker:
-    image: docker.cnb.cool/myqm/images-oss/skopeo:latest
+    image: quay.tencentcloudcr.com/skopeo/stable:latest
   services:
     - docker
   imports:
@@ -24,6 +24,7 @@
     - name: 构建指定镜像
       timeout: 30m
       script: |
+        unset REGISTRY_AUTH_FILE
         bash scripts/sync-versions.sh --check || exit 1
         if [ -z "$build_version" ]; then
           cd Middleware/$build_application_name && bash build.sh
@@ -55,6 +56,7 @@
     - name: 导出 AMD64 清单源镜像
       script: |
         set -euo pipefail
+        unset REGISTRY_AUTH_FILE
         while IFS= read -r tcr_ref; do
           [ -z "$tcr_ref" ] && continue
           key="${tcr_ref##*/}"
@@ -73,7 +75,7 @@
     tags: cnb:arch:arm64:v8
     cpus: 16
   docker:
-    image: docker.cnb.cool/myqm/images-oss/skopeo:latest-arm64
+    image: quay.tencentcloudcr.com/skopeo/stable:latest
   services:
     - docker
   imports:
@@ -94,6 +96,7 @@
     - name: 构建指定镜像
       timeout: 30m
       script: |
+        unset REGISTRY_AUTH_FILE
         bash scripts/sync-versions.sh --check || exit 1
         if [ -z "$build_version" ]; then
           cd Middleware/$build_application_name && bash build-arm64.sh
@@ -152,7 +155,7 @@ main:
         tags: cnb:arch:amd64
         cpus: 8
       docker:
-        image: docker.cnb.cool/myqm/images-oss/skopeo:latest
+        image: quay.tencentcloudcr.com/skopeo/stable:latest
       services:
         - docker
       imports:
@@ -260,7 +263,7 @@ main:
 
   # web_trigger_four: ###构建中间件所有镜像
   #   - docker:
-  #       image: docker.cnb.cool/myqm/images-oss/skopeo:latest
+  #       image: quay.tencentcloudcr.com/skopeo/stable:latest
   #     services:
   #       - docker
   #     imports:

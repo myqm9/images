@@ -29,7 +29,7 @@ WORKDIR /tmp
 # versions.env: LIBREOFFICE_RPM_VERSION
 ARG LIBREOFFICE_VERSION=7.5.9.2
 # 下载 LibreOffice
-RUN wget https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/LibreOffice_${LIBREOFFICE_VERSION}_Linux_x86-64_rpm.tar.gz \
+RUN wget https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/LibreOffice_${LIBREOFFICE_VERSION}_Linux_x86-64_rpm.tar.gz \
     && tar xf LibreOffice_${LIBREOFFICE_VERSION}_Linux_x86-64_rpm.tar.gz \
     && dnf localinstall -y LibreOffice_${LIBREOFFICE_VERSION}_Linux_x86-64_rpm/RPMS/*.rpm \
     && rm -rf LibreOffice*

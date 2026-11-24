@@ -26,7 +26,7 @@ RUN dnf update -y && \
 
 # 下载并安装 apollo-configservice
 RUN set -x \
-    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/apollo-configservice-${VERSION}-github.zip" \
+    && wget "https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/apollo-configservice-${VERSION}-github.zip" \
     && unzip apollo-configservice-${VERSION}-github.zip -d apollo-configservice \
     && mv apollo-configservice/apollo-configservice-${VERSION}.jar /apollo-configservice \
     && rm -rf apollo-configservice-${VERSION}-github.zip apollo-configservice

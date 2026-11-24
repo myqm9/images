@@ -18,7 +18,7 @@ RUN sed -i 's@dl-cdn.alpinelinux.org@mirrors.cloud.tencent.com@g' /etc/apk/repos
 
 # 下载并解压字体文件
 RUN set -x \
-    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/fonts.tar.gz" \
+    && wget "https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/fonts.tar.gz" \
     && tar -xf fonts.tar.gz -C /usr/share/ \
     && rm -rf fonts.tar.gz
 

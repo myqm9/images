@@ -13,7 +13,9 @@ trap 'rm -f "$temp"' EXIT
 status=0
 while IFS= read -r -d '' recipe; do
     awk -v mode=defaults -f scripts/version-args.awk "$recipe" > "$temp"
-    if ! cmp -s "$temp" "$recipe"; then
+    expected_checksum=$(sha256sum < "$temp")
+    current_checksum=$(sha256sum < "$recipe")
+    if [[ $expected_checksum != "$current_checksum" ]]; then
         if [[ $mode == --write ]]; then
             cat "$temp" > "$recipe"
         else

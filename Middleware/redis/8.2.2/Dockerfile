@@ -23,7 +23,7 @@ RUN set -eux; \
 	;
 # versions.env: REDIS_822_VERSION
 ARG REDIS_VERSION=8.2.2
-ENV REDIS_DOWNLOAD_URL=https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/redis-${REDIS_VERSION}.tar.gz
+ENV REDIS_DOWNLOAD_URL=https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/redis-${REDIS_VERSION}.tar.gz
 # versions.env: REDIS_822_DOWNLOAD_SHA
 ARG REDIS_DOWNLOAD_SHA=e355378d7f97efd06321fff881efc452a9673cc27b3a6d0dfd2a45fbcc83349c
 ENV REDIS_DOWNLOAD_SHA=${REDIS_DOWNLOAD_SHA}

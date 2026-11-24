@@ -43,7 +43,7 @@ RUN arch=${TARGETARCH:-amd64} \
 
 # lts / testing / prestable / etc
 # ARG REPO_CHANNEL="stable"
-ARG REPOSITORY="https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0"
+ARG REPOSITORY="https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0"
 # versions.env: CLICKHOUSE_ARM_VERSION
 ARG VERSION=23.3.9.55
 ARG PACKAGES="clickhouse-client clickhouse-server clickhouse-common-static"

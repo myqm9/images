@@ -61,7 +61,7 @@ RUN set -eux \
     && apk add --no-cache --virtual .build-deps \
         $DOCKER_PG_LLVM_DEPS \
     # 下载pgrouting源代码
-    && wget -O pgrouting.tar.gz "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/pgrouting-${PGROUTING_VERSION}.tar.gz" \
+    && wget -O pgrouting.tar.gz "https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/pgrouting-${PGROUTING_VERSION}.tar.gz" \
     && echo "Extracting pgrouting" \
     && tar -xvzf pgrouting.tar.gz \
     && cd pgrouting-* \
@@ -73,7 +73,7 @@ RUN set -eux \
     && cd ../.. \
     && rm -rf pgrouting* \
     # 下载和校验 PostGIS 源代码
-    && wget -O postgis.tar.gz "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/postgis-${POSTGIS_VERSION}.tar.gz" \
+    && wget -O postgis.tar.gz "https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/postgis-${POSTGIS_VERSION}.tar.gz" \
     && echo "${POSTGIS_SHA256} *postgis.tar.gz" | sha256sum -c - \
     && mkdir -p /usr/src/postgis \
     && tar --extract --file postgis.tar.gz --directory /usr/src/postgis --strip-components 1 \

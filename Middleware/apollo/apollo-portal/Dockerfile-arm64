@@ -27,7 +27,7 @@ RUN dnf update -y && \
 
 # 下载并安装 apollo-portal
 RUN set -x \
-    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/apollo-portal-${VERSION}-github.zip" \
+    && wget "https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/apollo-portal-${VERSION}-github.zip" \
     && unzip apollo-portal-${VERSION}-github.zip -d apollo-portal \
     && mv apollo-portal/apollo-portal-${VERSION}.jar /apollo-portal \
     && rm -rf apollo-portal-${VERSION}-github.zip apollo-portal

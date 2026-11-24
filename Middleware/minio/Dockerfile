@@ -12,7 +12,7 @@ ARG MINIO_VERSION=RELEASE.2025-10-15T17-29-55Z
 WORKDIR /app
 
 # 下载minio并构建二进制
-RUN wget https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/minio-${MINIO_VERSION}.tar.gz \
+RUN wget https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/minio-${MINIO_VERSION}.tar.gz \
 && tar -zxvf minio-${MINIO_VERSION}.tar.gz \
 && rm -rf minio-${MINIO_VERSION}.tar.gz \
 && cd minio-${MINIO_VERSION} \

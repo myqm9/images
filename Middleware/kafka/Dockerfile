@@ -12,7 +12,7 @@ ARG SCALA_VERSION=2.13
 # 下载Kafka
 RUN dnf update -y && \
     # 下载Kafka
-    wget https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz -O /tmp/kafka.tgz && \
+    wget https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz -O /tmp/kafka.tgz && \
     mkdir /opt/kafka && \
     tar -xf /tmp/kafka.tgz -C /opt/kafka --strip-components=1 && \
     rm -rf /tmp/kafka.tgz

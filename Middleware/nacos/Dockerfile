@@ -39,7 +39,7 @@ WORKDIR $BASE_DIR
 
 # 下载并安装 Nacos
 RUN set -x \
-    && wget -O nacos-server.tar.gz "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/nacos-server-${NACOS_VERSION}.tar.gz" \
+    && wget -O nacos-server.tar.gz "https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/nacos-server-${NACOS_VERSION}.tar.gz" \
     && tar -xzvf nacos-server.tar.gz -C /home \
     && rm -rf nacos-server.tar.gz /home/nacos/bin/* /home/nacos/conf/*.properties /home/nacos/conf/*.example \
     && ln -snf /usr/share/zoneinfo/$TIME_ZONE /etc/localtime && echo $TIME_ZONE > /etc/timezone

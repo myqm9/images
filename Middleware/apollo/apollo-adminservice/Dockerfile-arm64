@@ -26,7 +26,7 @@ RUN dnf update -y && \
 
 # 下载并安装 apollo-adminservice
 RUN set -x \
-    && wget "https://cnb.cool/tsingyun/devops/tsingyun-images-oss/-/releases/download/v1.0.0/apollo-adminservice-${VERSION}-github.zip" \
+    && wget "https://cnb.cool/myqm/images-oss/-/releases/download/v1.0.0/apollo-adminservice-${VERSION}-github.zip" \
     && unzip apollo-adminservice-${VERSION}-github.zip -d apollo-adminservice \
     && mv apollo-adminservice/apollo-adminservice-${VERSION}.jar /apollo-adminservice \
     && rm -rf apollo-adminservice-${VERSION}-github.zip apollo-adminservice
