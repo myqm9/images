@@ -1,5 +1,5 @@
 # versions.env: FASTDFS_BASE_IMAGE
-ARG FASTDFS_BASE_IMAGE=alpine
+ARG FASTDFS_BASE_IMAGE=mirror.ccs.tencentyun.com/library/alpine
 FROM ${FASTDFS_BASE_IMAGE}
 
 # 设置环境变量

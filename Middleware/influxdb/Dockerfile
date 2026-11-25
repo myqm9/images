@@ -1,5 +1,5 @@
 # versions.env: INFLUXDB_BASE_IMAGE
-ARG INFLUXDB_BASE_IMAGE=ubuntu:24.04
+ARG INFLUXDB_BASE_IMAGE=mirror.ccs.tencentyun.com/library/ubuntu:24.04
 FROM ${INFLUXDB_BASE_IMAGE}
 
 RUN sed -Ei "s@(security|ports|archive).ubuntu.com@mirrors.cloud.tencent.com@g" /etc/apt/sources.list.d/ubuntu.sources && \

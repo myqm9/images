@@ -4,7 +4,7 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 # versions.env: NGINX_BASE_IMAGE
-ARG NGINX_BASE_IMAGE=alpine:3.21
+ARG NGINX_BASE_IMAGE=mirror.ccs.tencentyun.com/library/alpine:3.21
 FROM ${NGINX_BASE_IMAGE}
 
 LABEL maintainer="NGINX Docker Maintainers <docker-maint@nginx.com>"

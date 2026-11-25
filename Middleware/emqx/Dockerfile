@@ -1,5 +1,5 @@
 # versions.env: EMQX_BASE_IMAGE
-ARG EMQX_BASE_IMAGE=debian:13-slim
+ARG EMQX_BASE_IMAGE=mirror.ccs.tencentyun.com/library/debian:13-slim
 FROM ${EMQX_BASE_IMAGE}
 
 # versions.env: EMQX_VERSION

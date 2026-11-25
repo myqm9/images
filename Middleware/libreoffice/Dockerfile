@@ -1,6 +1,6 @@
 # versions.env: CORRETTO_11_TAG
 ARG VERSION=11-alpine3.19-jdk
-FROM amazoncorretto:${VERSION}
+FROM mirror.ccs.tencentyun.com/library/amazoncorretto:${VERSION}
 # versions.env: LIBREOFFICE_SERIES
 ARG LIBREOFFICE_SERIES=7.5
 # versions.env: LIBREOFFICE_APK_VERSION

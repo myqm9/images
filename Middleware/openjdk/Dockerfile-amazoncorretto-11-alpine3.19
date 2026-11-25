@@ -1,6 +1,6 @@
 # versions.env: CORRETTO_11_TAG
 ARG VERSION=11-alpine3.19-jdk
-FROM amazoncorretto:${VERSION}
+FROM mirror.ccs.tencentyun.com/library/amazoncorretto:${VERSION}
 
 # 替换默认的软件源为腾讯云镜像源,更新系统并安装软件包
 RUN sed -i 's@dl-cdn.alpinelinux.org@mirrors.cloud.tencent.com@g' /etc/apk/repositories && \

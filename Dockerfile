@@ -1,5 +1,5 @@
 # 使用 Alpine Linux 作为基础镜像
-FROM alpine:latest
+FROM mirror.ccs.tencentyun.com/library/alpine:latest
 
 # 维护者信息
 LABEL maintainer="myqm"

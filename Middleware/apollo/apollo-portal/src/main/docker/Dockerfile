@@ -19,9 +19,9 @@
 # 3. Run with: docker run -p 8070:8070 -e SPRING_DATASOURCE_URL="jdbc:mysql://fill-in-the-correct-server:3306/ApolloPortalDB?characterEncoding=utf8" -e SPRING_DATASOURCE_USERNAME=FillInCorrectUser -e SPRING_DATASOURCE_PASSWORD=FillInCorrectPassword -e APOLLO_PORTAL_ENVS=dev,pro -e DEV_META=http://fill-in-dev-meta-server:8080 -e PRO_META=http://fill-in-pro-meta-server:8080 -d -v /tmp/logs:/opt/logs --name apollo-portal apolloconfig/apollo-portal
 
 # versions.env: APOLLO_PORTAL_UNPACK_IMAGE
-ARG APOLLO_PORTAL_UNPACK_IMAGE=alpine:3.15.5
+ARG APOLLO_PORTAL_UNPACK_IMAGE=mirror.ccs.tencentyun.com/library/alpine:3.15.5
 # versions.env: APOLLO_PORTAL_JRE_IMAGE
-ARG APOLLO_PORTAL_JRE_IMAGE=openjdk:8-jre-slim
+ARG APOLLO_PORTAL_JRE_IMAGE=mirror.ccs.tencentyun.com/library/openjdk:8-jre-slim
 FROM ${APOLLO_PORTAL_UNPACK_IMAGE}
 
 # versions.env: APOLLO_VERSION

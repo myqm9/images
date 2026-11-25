@@ -1,5 +1,5 @@
 # versions.env: INFLUXDB_291_BASE_IMAGE
-ARG INFLUXDB_291_BASE_IMAGE=alpine:3.23
+ARG INFLUXDB_291_BASE_IMAGE=mirror.ccs.tencentyun.com/library/alpine:3.23
 FROM ${INFLUXDB_291_BASE_IMAGE}
 
 #RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.nju.edu.cn/g' /etc/apk/repositories

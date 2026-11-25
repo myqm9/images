@@ -1,8 +1,8 @@
 # 阶段1：依赖下载层
 # versions.env: MINIO_BUILDER_IMAGE
-ARG MINIO_BUILDER_IMAGE=golang:1.24.11-alpine3.23
+ARG MINIO_BUILDER_IMAGE=mirror.ccs.tencentyun.com/library/golang:1.24.11-alpine3.23
 # versions.env: MINIO_BASE_IMAGE
-ARG MINIO_BASE_IMAGE=minio/minio:latest
+ARG MINIO_BASE_IMAGE=mirror.ccs.tencentyun.com/minio/minio:latest
 FROM ${MINIO_BUILDER_IMAGE} AS builder
 
 # 定义MINIO版本

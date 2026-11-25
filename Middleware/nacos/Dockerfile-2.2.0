@@ -1,5 +1,5 @@
 # versions.env: NACOS_BASE_IMAGE
-ARG NACOS_BASE_IMAGE=alpine:latest
+ARG NACOS_BASE_IMAGE=mirror.ccs.tencentyun.com/library/alpine:latest
 FROM ${NACOS_BASE_IMAGE}
 LABEL maintainer="devops@tsingyun.link"
 

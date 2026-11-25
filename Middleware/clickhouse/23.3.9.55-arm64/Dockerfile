@@ -1,7 +1,7 @@
 # versions.env: CLICKHOUSE_GLIBC_IMAGE
-ARG CLICKHOUSE_GLIBC_IMAGE=ubuntu:20.04
+ARG CLICKHOUSE_GLIBC_IMAGE=mirror.ccs.tencentyun.com/library/ubuntu:20.04
 # versions.env: CLICKHOUSE_BASE_IMAGE
-ARG CLICKHOUSE_BASE_IMAGE=alpine
+ARG CLICKHOUSE_BASE_IMAGE=mirror.ccs.tencentyun.com/library/alpine
 FROM ${CLICKHOUSE_GLIBC_IMAGE} AS glibc-donor
 ARG TARGETARCH
 

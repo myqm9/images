@@ -1,7 +1,7 @@
 # versions.env: GEOSERVER_BUILDER_IMAGE
-ARG BUILDER_BASE_IMAGE=eclipse-temurin:17.0.15_6-jdk-jammy@sha256:d80cf84d4d49682f047cb303a11be1fcc8322b1e4cd7a7c2b17454085c1f2ffb
+ARG BUILDER_BASE_IMAGE=mirror.ccs.tencentyun.com/library/eclipse-temurin:17.0.15_6-jdk-jammy@sha256:d80cf84d4d49682f047cb303a11be1fcc8322b1e4cd7a7c2b17454085c1f2ffb
 # versions.env: GEOSERVER_BASE_IMAGE
-ARG GEOSERVER_BASE_IMAGE=tomcat:9.0.105-jdk17-temurin-jammy@sha256:c2fcc23dc9579631f7d7063920dab9f53b1a09de947f9f61146a643ab50dc19c
+ARG GEOSERVER_BASE_IMAGE=mirror.ccs.tencentyun.com/library/tomcat:9.0.105-jdk17-temurin-jammy@sha256:c2fcc23dc9579631f7d7063920dab9f53b1a09de947f9f61146a643ab50dc19c
 
 # versions.env: GS_VERSION
 ARG GS_VERSION=2.27.1

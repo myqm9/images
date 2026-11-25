@@ -5,9 +5,9 @@
 #
 
 # versions.env: PG_BASE_IMAGE
-ARG PG_BASE_IMAGE=alpine:3.24
+ARG PG_BASE_IMAGE=mirror.ccs.tencentyun.com/library/alpine:3.24
 # versions.env: PG_GOSU_BUILDER_IMAGE
-ARG PG_GOSU_BUILDER_IMAGE=golang:1.26.5
+ARG PG_GOSU_BUILDER_IMAGE=mirror.ccs.tencentyun.com/library/golang:1.26.5
 FROM ${PG_GOSU_BUILDER_IMAGE} AS gosubuilder
 # versions.env: GOSU_VERSION
 ARG GOSU_VERSION=1.19

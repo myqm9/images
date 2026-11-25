@@ -1,5 +1,5 @@
 # versions.env: REDIS_822_BASE_IMAGE
-ARG REDIS_822_BASE_IMAGE=alpine:3.22
+ARG REDIS_822_BASE_IMAGE=mirror.ccs.tencentyun.com/library/alpine:3.22
 FROM ${REDIS_822_BASE_IMAGE}
 
 # add our user and group first to make sure their IDs get assigned consistently, regardless of whatever dependencies get added
